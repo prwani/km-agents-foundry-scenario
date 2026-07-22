@@ -1,4 +1,5 @@
-.azure/
+.azure/*
+!.azure/deployment-plan.md
 .env
 .env.*
 !.env.example

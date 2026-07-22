@@ -1,14 +1,14 @@
 openapi: 3.0.3
 info:
-  title: KM Agents Case Study API
+  title: KM Prompt Case Study API
   version: 0.3.0
 servers:
   - url: https://<km-portal-fqdn>
 paths:
   /api/case-studies:
     post:
-      operationId: createCaseStudy
-      summary: Create and validate a case-study deck
+      operationId: createPromptCaseStudy
+      summary: Create and validate a case-study deck with the Prompt stack
       security:
         - entraOAuth:
             - api://<portal-api-app-client-id>/access_as_user
@@ -17,20 +17,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CaseStudyRequest'
+              $ref: '#/components/schemas/PromptCaseStudyRequest'
       responses:
         "200":
-          description: Case-study generation result. An approved response includes an opaque artifact ID for the authenticated single-use download endpoint.
+          description: Case-study generation result
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CaseStudyResponse'
-        "401":
-          description: Missing or invalid Microsoft Entra bearer token
-        "422":
-          description: Request or approved source validation failed
-        "502":
-          description: Orchestrator or specialist agent failure
 components:
   securitySchemes:
     entraOAuth:
@@ -42,21 +36,14 @@ components:
           scopes:
             api://<portal-api-app-client-id>/access_as_user: Invoke the KM case-study portal as the signed-in user.
   schemas:
-    CaseStudyRequest:
+    PromptCaseStudyRequest:
       type: object
-      required:
-        - implementation
-        - customer_name
-        - customer_name_approved_for_external_use
-        - opportunity_summary
-        - audience
-        - template_url
-        - source_artifacts
-        - correlation_id
+      required: [implementation, customer_name, customer_name_approved_for_external_use, opportunity_summary, audience, template_url, source_artifacts, correlation_id]
       properties:
         implementation:
           type: string
-          enum: [prompt, hosted]
+          enum: [prompt]
+          default: prompt
         customer_name:
           type: string
           maxLength: 120
@@ -76,33 +63,35 @@ components:
           minItems: 1
           maxItems: 10
           items:
-            type: object
-            required: [url, kind]
-            properties:
-              url:
-                type: string
-                format: uri
-              kind:
-                type: string
-                enum: [docx, pptx, pdf, xlsx]
-              size_bytes:
-                type: integer
-                minimum: 1
-                maximum: 20971520
-              sha256:
-                type: string
-                pattern: '^[a-f0-9]{64}$'
+            $ref: '#/components/schemas/SourceArtifact'
         correlation_id:
           type: string
           minLength: 8
           maxLength: 100
+    SourceArtifact:
+      type: object
+      required: [url, kind]
+      properties:
+        url:
+          type: string
+          format: uri
+        kind:
+          type: string
+          enum: [docx, pptx, pdf, xlsx]
+        size_bytes:
+          type: integer
+          minimum: 1
+          maximum: 20971520
+        sha256:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
     CaseStudyResponse:
       type: object
       required: [implementation, correlation_id, status, validation, repair_attempts]
       properties:
         implementation:
           type: string
-          enum: [prompt, hosted]
+          enum: [prompt]
         correlation_id:
           type: string
         status:

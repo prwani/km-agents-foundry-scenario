@@ -15,6 +15,7 @@ The authenticated KM portal lets users explicitly select either stack. Both use 
 - Foundry denies traffic by default and allows only configured developer IPv4 addresses plus the KM portal NAT Gateway static public IPv4.
 - The KM portal runs on Azure Container Apps Consumption in a workload-profiles environment with VNet integration and NAT Gateway.
 - The signed-in user is preserved through OBO. Explicit SharePoint/OneDrive URLs are resolved by the portal with delegated Graph access.
+- The portal uses a managed identity for a private Blob artifact container; Key Vault supplies its OBO client secret and artifact-owner hash salt. Storage disables public blob access and shared-key access.
 - Files move through Foundry-managed temporary file/session storage and are deleted after retrieval.
 - Phase 1 downloads are authenticated, single-use, and expire after 15 minutes.
 
@@ -29,6 +30,7 @@ The authenticated KM portal lets users explicitly select either stack. Both use 
 | `assets/templates/` | Canonical Contoso template and versioned validation policy |
 | `assets/brand/` | Contoso logo and brand tokens |
 | `evaluation/corpus/v1/` | Reproducible synthetic DOCX/PPTX/PDF/XLSX evidence and 12-case manifest |
+| `scripts/report_evaluation.py` | Fail-closed 72-run synthetic evaluation report generator |
 | `src/km_portal/` | Authenticated portal API |
 | `infra/` | Foundry, Container Apps, NAT/static IP, identity, observability, and budget Bicep |
 | `tests/` | Offline contract, template, security, and infrastructure tests |

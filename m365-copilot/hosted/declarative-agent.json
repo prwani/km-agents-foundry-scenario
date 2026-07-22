@@ -1,0 +1,19 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/declarative-agent/v1.4/schema.json",
+  "version": "v1.4",
+  "name": "KM Case Study (Hosted)",
+  "description": "Creates and validates a customer-safe case-study deck with the KM Hosted-agent implementation.",
+  "instructions": "Use only the KM Hosted action to create case studies. Always use implementation hosted. Ask for explicit SharePoint or OneDrive URLs and file kinds, never for file contents, credentials, or tokens. A customer name may be included only when the user explicitly attests that it is approved for external use. Surface validation failure without override. An approved result contains an opaque artifact ID that can be downloaded only by the authenticated user before expiry.",
+  "conversation_starters": [
+    {
+      "title": "Create a hosted-agent case study",
+      "text": "Create a case-study deck using the Hosted implementation and my approved evidence links."
+    }
+  ],
+  "actions": [
+    {
+      "id": "km-hosted-case-study",
+      "file": "openapi.yaml"
+    }
+  ]
+}

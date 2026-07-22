@@ -1,0 +1,14 @@
+name: km-prompt-orchestrator
+kind: prompt
+model: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+instructions_file: instructions.md
+tools:
+  - type: a2a_preview
+    name: km-prompt-case-study-generator
+    project_connection_id: ${PROMPT_GENERATOR_A2A_CONNECTION_ID}
+    description: Creates a case-study PPTX with Code Interpreter.
+  - type: a2a_preview
+    name: km-prompt-validator
+    project_connection_id: ${PROMPT_VALIDATOR_A2A_CONNECTION_ID}
+    description: Validates a generated PPTX with Code Interpreter.
+temperature: 0.2

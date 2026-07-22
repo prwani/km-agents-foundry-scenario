@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="180" viewBox="0 0 640 180" role="img" aria-labelledby="title desc">
+  <title id="title">Contoso Limited logo</title>
+  <desc id="desc">A teal circle with gold CL initials and a navy Contoso Limited wordmark.</desc>
+  <circle cx="90" cy="90" r="68" fill="#00A6A6"/>
+  <text x="90" y="106" text-anchor="middle" font-family="Aptos, Arial, sans-serif" font-size="54" font-weight="700" fill="#F4B942">CL</text>
+  <text x="185" y="82" font-family="Aptos Display, Arial, sans-serif" font-size="42" font-weight="700" fill="#17324D">CONTOSO</text>
+  <text x="187" y="126" font-family="Aptos, Arial, sans-serif" font-size="26" font-weight="600" letter-spacing="8" fill="#607386">LIMITED</text>
+</svg>

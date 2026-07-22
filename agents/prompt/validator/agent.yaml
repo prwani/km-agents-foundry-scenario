@@ -1,0 +1,7 @@
+name: km-prompt-validator
+kind: prompt
+model: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+instructions_file: instructions.md
+tools:
+  - type: code_interpreter
+temperature: 0.0

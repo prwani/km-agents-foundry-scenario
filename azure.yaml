@@ -1,0 +1,74 @@
+name: km-agents-foundry-scenario
+metadata:
+  template: km-agents-foundry-scenario@0.1.0
+infra:
+  provider: bicep
+  path: infra
+services:
+  ai-project:
+    host: azure.ai.project
+    deployments:
+      - name: gpt-4o-mini
+        model:
+          name: gpt-4o-mini
+          format: OpenAI
+          version: "2024-07-18"
+        sku:
+          name: GlobalStandard
+          capacity: 20
+  hosted-orchestrator:
+    project: .
+    host: azure.ai.agent
+    uses:
+      - ai-project
+    description: Routes requests through the hosted generator and validator using Foundry A2A.
+    codeConfiguration:
+      runtime: python_3_13
+      entryPoint: src/km_agents/agents/hosted/orchestrator/main.py
+      dependencyResolution: remote_build
+    environmentVariables:
+      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+      HOSTED_GENERATOR_A2A_CONNECTION_ID: ${HOSTED_GENERATOR_A2A_CONNECTION_ID}
+      HOSTED_VALIDATOR_A2A_CONNECTION_ID: ${HOSTED_VALIDATOR_A2A_CONNECTION_ID}
+      MAX_REPAIR_ATTEMPTS: "2"
+  hosted-case-study-generator:
+    project: .
+    host: azure.ai.agent
+    uses:
+      - ai-project
+    description: Uses Agent Framework Harness and the in-house PowerPoint skill to create template-compliant decks.
+    codeConfiguration:
+      runtime: python_3_13
+      entryPoint: src/km_agents/agents/hosted/case_study_generator/main.py
+      dependencyResolution: remote_build
+    environmentVariables:
+      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+      WORK_IQ_PROJECT_CONNECTION_ID: ${WORK_IQ_PROJECT_CONNECTION_ID}
+      CASE_STUDY_TEMPLATE_URL: ${CASE_STUDY_TEMPLATE_URL}
+      PPTX_SKILL_PATH: skills/pptx
+      HARNESS_MAX_ITERATIONS: "3"
+      HARNESS_DISABLE_WEB_SEARCH: "true"
+      HARNESS_DISABLE_SHELL: "true"
+  hosted-validator:
+    project: .
+    host: azure.ai.agent
+    uses:
+      - ai-project
+    description: Applies deterministic Open XML checks and model-assisted safety review to generated decks.
+    codeConfiguration:
+      runtime: python_3_13
+      entryPoint: src/km_agents/agents/hosted/validator/main.py
+      dependencyResolution: remote_build
+    environmentVariables:
+      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+      CASE_STUDY_TEMPLATE_URL: ${CASE_STUDY_TEMPLATE_URL}
+      TEMPLATE_POLICY_PATH: assets/templates/contoso-template-policy.json
+  km-portal:
+    project: .
+    host: containerapp
+    language: python
+    docker:
+      path: Dockerfile
+    uses:
+      - ai-project
+      - hosted-orchestrator

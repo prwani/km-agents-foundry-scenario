@@ -1,0 +1,46 @@
+openapi: 3.0.3
+info:
+  title: KM Agents Orchestrator API
+  version: 0.1.0
+servers:
+  - url: https://<km-portal-fqdn>
+paths:
+  /case-studies:
+    post:
+      operationId: createCaseStudy
+      summary: Create and validate a case-study deck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customer_name
+                - opportunity_summary
+                - audience
+                - template_url
+                - output_url
+              properties:
+                customer_name:
+                  type: string
+                opportunity_summary:
+                  type: string
+                audience:
+                  type: string
+                template_url:
+                  type: string
+                  format: uri
+                source_artifact_urls:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                output_url:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: Case-study generation result
+        "502":
+          description: Orchestrator or specialist agent failure

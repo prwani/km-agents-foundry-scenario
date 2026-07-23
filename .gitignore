@@ -19,6 +19,7 @@ generated/
 infra/main.json
 *.pptx
 !assets/templates/*.pptx
+!src/assets/templates/*.pptx
 !evaluation/corpus/**/*.pptx
 *.potx
 *.ppt

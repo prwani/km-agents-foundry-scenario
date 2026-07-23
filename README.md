@@ -39,7 +39,7 @@ The Entra-authenticated KM portal accepts up to ten validated DOCX, PDF, PPTX, o
 | `src/km_agents/agents/hosted/` | Hosted-agent entrypoints |
 | `skills/pptx/` | Repository-owned PowerPoint skill |
 | `src/km_agents/pptx_skill/` | Template generation, deck generation, and deterministic validation |
-| `assets/templates/` | Canonical Contoso template and versioned validation policy |
+| `assets/templates/` | Eight-slide output template, 22-slide Contoso brand-guidelines reference, and versioned validation policy |
 | `assets/brand/` | Contoso logo and brand tokens |
 | `evaluation/corpus/v1/` | Reproducible synthetic DOCX/PPTX/PDF/XLSX evidence and 12-case manifest |
 | `scripts/report_evaluation.py` | Fail-closed 72-run synthetic evaluation report generator |

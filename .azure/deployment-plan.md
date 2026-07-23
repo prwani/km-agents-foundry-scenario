@@ -2,17 +2,19 @@
 
 ## Status
 
-Validated
+Ready for Validation
 
 ## Azure context
 
 - **Subscription**: ME-M365CPI88726844-prafullawani-1 (`6f52fedd-df2c-47f7-a01f-e48682864606`)
 - **Tenant**: `a3321a7a-958c-4f4a-ad4f-f4d9c193c977`
-- **Location**: Sweden Central (`swedencentral`)
-- **AZD environment**: `km-agents-swc`
-- **Resource group**: `rg-km-agents-swc`
+- **Location**: East US 2 (`eastus2`)
+- **AZD environment**: `km-agents-eus2-probe`
+- **Resource group**: `rg-km-agents-eus2-probe`
 
-Microsoft Foundry and Azure Container Apps providers are registered and both support Sweden Central. Existing Azure Policy assignments concern Defender coverage for database services and do not impose identified conflicts.
+Microsoft Foundry and Azure Container Apps providers are registered and both support East US 2. This
+resource group already hosts the proven Foundry account, project, active Hosted agent, and portal
+deployment. The earlier Sweden Central deployment remains historical and is not a deployment target.
 
 ## Current architecture
 
@@ -25,24 +27,29 @@ Microsoft Foundry and Azure Container Apps providers are registered and both sup
 
 ## Remaining deployment work
 
-1. Do not retry the Container Apps environment until requested. Sweden Central could not allocate it because of transient AKS capacity pressure; switch regions only with explicit approval.
-2. Supply the two Prompt A2A connection IDs, then provision the Prompt orchestrator after its specialists.
-3. Resolve the Hosted-agent creation failure before attempting a Hosted session. The last direct-code deployment failed with Foundry `500 server_error` before a version was created; request IDs `fa2d9b02a337aa7d1b7f50b166fe5dbb` and `c0a5d3153e533a8c73e9e22a904fd221` are retained for Microsoft support.
-4. Implement the Hosted Foundry session file-transfer adapter only after the installed SDK exposes supported create-session, upload, download, and cleanup APIs. Hosted portal requests remain fail-closed until then.
+1. Revalidate the current source and Bicep against the active East US 2 environment before deployment.
+2. Create new Prompt generator and validator versions with the canonical template and the bundled
+   brand-guidelines reference. Provision the Prompt orchestrator only when its two A2A connection
+   IDs are configured.
+3. Deploy the current Hosted Harness package, including deterministic visual QA and the
+   brand-guidelines reference, then invoke it from Foundry.
+4. Deploy the portal revision only after the Hosted deployment succeeds and the Container Apps
+   registry role check is confirmed.
 
 ## Validation checklist
 
-- [x] Azure CLI and Azure Developer CLI availability
-- [x] `azure.yaml` schema validation
-- [x] azd authentication and Sweden Central subscription selection
-- [x] Bicep compilation and static role verification
-- [x] Provision preview
-- [x] Python test suite and Prompt-agent provisioning dry run
-- [x] Container image package validation
+- [ ] Azure CLI and Azure Developer CLI availability
+- [ ] `azure.yaml` schema validation
+- [ ] azd authentication and East US 2 subscription selection
+- [ ] Bicep compilation and static role verification
+- [ ] Provision preview against `km-agents-eus2-probe`
+- [ ] Python test suite, local Hosted harness E2E, and Prompt-agent provisioning dry run
+- [ ] Container image package validation
 
 ## Validation proof
 
-Validation completed on 2026-07-22 for `km-agents-swc`.
+The earlier Sweden Central validation record below is retained as historical evidence only. Fresh
+validation is required for the current source and East US 2 deployment target.
 
 | Check | Command | Result |
 | --- | --- | --- |
@@ -206,7 +213,7 @@ Validation refreshed on 2026-07-23 against the current official direct-code cont
 
 The Hosted portal path cannot be exposed as functional until supported Foundry hosted-session file APIs are available. Prompt A2A connection IDs and Entra application values require tenant/operator configuration and must never be guessed or replaced with placeholders. After those values are provided and the implementation is marked `Ready for Validation`, the next mandatory workflow is `azure-validate` followed by `azure-deploy`.
 
-## East US 2 diagnostic stack (2026-07-23)
+## East US 2 deployment target and diagnostic history (2026-07-23)
 
 Sweden Central's Hosted-agent creation kept failing with Foundry `500 server_error` (9/9 attempts) and its Container Apps environment kept failing with `AKSCapacityHeavyUsage`. Per explicit operator instruction, a throwaway resource group `rg-km-agents-eus2-probe` (East US 2, azd environment `km-agents-eus2-probe`) was stood up to isolate whether these were regional/backend issues or caused by this repo's code, RBAC, or config. **Sweden Central (`rg-km-agents-swc`) was left completely untouched throughout this entire diagnostic.**
 
@@ -228,4 +235,6 @@ Full stack (VNet/NAT, Key Vault + private endpoint, Storage + private endpoint, 
 
 ### Open decision for the operator
 
-All fixes in items 4–8 above are in the shared `infra/main.bicep` and `Dockerfile`, so they apply to Sweden Central too whenever it is revisited (not East-US-2-specific). Decide: (a) migrate the Sweden Central deployment permanently to East US 2 (or another region) now that this stack is proven end-to-end, (b) retry Sweden Central later with these same fixes once ACA capacity frees up and escalate the Hosted `500 server_error` to Microsoft support as a region-scoped incident (9 request IDs collected, now with definitive cross-region proof), or (c) run both regions in parallel for a period. Sweden Central resources have not been modified.
+East US 2 is the active deployment target for the current source revision. Sweden Central resources
+remain historical and untouched. Before the next deployment, re-run validation and record fresh
+proof for `km-agents-eus2-probe`.

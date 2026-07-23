@@ -39,6 +39,14 @@ def create_generator_harness(client: Any) -> Any:
     ).resolve()
     if not template_path.is_file():
         raise ConfigurationError(f"Canonical PowerPoint template is missing: {template_path}")
+    brand_guidelines_path = Path(
+        os.getenv(
+            "CASE_STUDY_BRAND_GUIDELINES_PATH",
+            "assets/templates/contoso-case-study-template-with-brand-guidelines.pptx",
+        )
+    ).resolve()
+    if not brand_guidelines_path.is_file():
+        raise ConfigurationError(f"Contoso brand-guidelines template is missing: {brand_guidelines_path}")
 
     workspace = Path(os.getenv("AGENT_WORKSPACE_ROOT", str(Path.home() / "data"))).resolve()
     max_repairs = _max_repair_attempts()
@@ -49,7 +57,12 @@ def create_generator_harness(client: Any) -> Any:
         agent_instructions=(
             "Complete the entire case-study workflow yourself. Generate an eight-slide Contoso "
             f"Limited case-study deck from user-uploaded files under input/ using the canonical "
-            f"template at {template_path}. First call extract_uploaded_evidence for every source "
+            f"template at {template_path} and follow the Contoso brand-guidelines reference at "
+            f"{brand_guidelines_path}. The output contains only the eight canonical case-study "
+            "slides, not the reference deck's guidance slides. Preserve the template typography, "
+            "approved palette and contrast, safe margins, flat visual style, source-labelled "
+            "data treatment, and clear, credible, human, responsible voice. First call "
+            "extract_uploaded_evidence for every source "
             "file, then use only the extracted evidence to populate every field of the "
             "generate_case_study_deck content schema. When the request does not approve the "
             "customer name, use Customer and never place the raw customer name in any content field. "

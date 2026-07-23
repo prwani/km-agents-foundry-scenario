@@ -19,6 +19,9 @@ from km_agents.contracts import (
 from km_agents.grounding import EVIDENCE_PENDING, text_is_evidence_backed
 from km_agents.pptx_skill.validation import validate_presentation
 
+_EMU_PER_INCH = 914400
+_SAFE_MARGIN_INCHES = 0.55
+
 
 def workspace_deck_path(relative_path: str) -> Path:
     if not relative_path or Path(relative_path).is_absolute():
@@ -66,6 +69,163 @@ def _source_form(value: str, request: CaseStudyRequest) -> str:
     )
 
 
+def _template_path() -> Path:
+    return Path(
+        os.getenv("CASE_STUDY_TEMPLATE_PATH", "assets/templates/contoso-case-study-template.pptx")
+    )
+
+
+def _font_style(shape: object) -> tuple[object, ...] | None:
+    if not getattr(shape, "has_text_frame", False):
+        return None
+    paragraph = shape.text_frame.paragraphs[0]
+    if not paragraph.runs:
+        return None
+    font = paragraph.runs[0].font
+    color = font.color
+    try:
+        rgb = color.rgb
+    except AttributeError:
+        rgb = None
+    return (
+        font.name,
+        font.size,
+        font.bold,
+        font.italic,
+        color.type,
+        rgb,
+    )
+
+
+def _visual_finding(
+    message: str,
+    *,
+    slide_number: int,
+    shape_name: str | None = None,
+    evidence: dict[str, object] | None = None,
+) -> ValidationFinding:
+    return ValidationFinding(
+        code=FindingCode.VISUAL_BRAND_VIOLATION,
+        severity=FindingSeverity.ERROR,
+        message=message,
+        slide_number=slide_number,
+        shape_name=shape_name,
+        evidence=evidence or {},
+    )
+
+
+def _estimated_line_count(shape: object) -> int:
+    frame = shape.text_frame
+    font_size = _font_style(shape)[1] if _font_style(shape) else None
+    if font_size is None:
+        return 0
+    characters_per_line = max(
+        1,
+        int((shape.width / _EMU_PER_INCH * 72) / (font_size.pt * 0.52)),
+    )
+    lines = 0
+    for paragraph in frame.paragraphs:
+        text = paragraph.text.strip()
+        if not text:
+            continue
+        lines += max(1, (len(text) + characters_per_line - 1) // characters_per_line)
+    return lines
+
+
+def _visual_brand_findings(deck_path: Path) -> list[ValidationFinding]:
+    template_path = _template_path()
+    if not template_path.is_file():
+        return [
+            ValidationFinding(
+                code=FindingCode.INCONCLUSIVE,
+                severity=FindingSeverity.ERROR,
+                message=f"Canonical template is unavailable for visual QA: {template_path}",
+            )
+        ]
+
+    template = Presentation(template_path)
+    candidate = Presentation(deck_path)
+    findings: list[ValidationFinding] = []
+    for slide_number, (template_slide, candidate_slide) in enumerate(
+        zip(template.slides, candidate.slides, strict=False),
+        start=1,
+    ):
+        expected_shapes = {shape.name: shape for shape in template_slide.shapes}
+        actual_shapes = {shape.name: shape for shape in candidate_slide.shapes}
+        unexpected_shapes = sorted(set(actual_shapes) - set(expected_shapes))
+        for shape_name in unexpected_shapes:
+            findings.append(
+                _visual_finding(
+                    "Deck contains an unapproved visual element",
+                    slide_number=slide_number,
+                    shape_name=shape_name,
+                )
+            )
+
+        for shape_name, expected in expected_shapes.items():
+            if not shape_name.startswith("editable:"):
+                continue
+            actual = actual_shapes.get(shape_name)
+            if actual is None or not getattr(actual, "has_text_frame", False):
+                continue
+
+            expected_geometry = (expected.left, expected.top, expected.width, expected.height)
+            actual_geometry = (actual.left, actual.top, actual.width, actual.height)
+            if actual_geometry != expected_geometry:
+                findings.append(
+                    _visual_finding(
+                        "Editable content region no longer matches the approved layout",
+                        slide_number=slide_number,
+                        shape_name=shape_name,
+                    )
+                )
+                continue
+
+            if _font_style(actual) != _font_style(expected):
+                findings.append(
+                    _visual_finding(
+                        "Editable content no longer preserves the approved typography or contrast",
+                        slide_number=slide_number,
+                        shape_name=shape_name,
+                    )
+                )
+
+            left = actual.left / _EMU_PER_INCH
+            top = actual.top / _EMU_PER_INCH
+            right = (actual.left + actual.width) / _EMU_PER_INCH
+            bottom = (actual.top + actual.height) / _EMU_PER_INCH
+            slide_width = candidate.slide_width / _EMU_PER_INCH
+            slide_height = candidate.slide_height / _EMU_PER_INCH
+            if (
+                left < _SAFE_MARGIN_INCHES
+                or top < _SAFE_MARGIN_INCHES
+                or right > slide_width - _SAFE_MARGIN_INCHES
+                or bottom > slide_height - _SAFE_MARGIN_INCHES
+            ):
+                findings.append(
+                    _visual_finding(
+                        "Editable content region exceeds the 0.55-inch safe margin",
+                        slide_number=slide_number,
+                        shape_name=shape_name,
+                    )
+                )
+
+            font_size = _font_style(actual)[1] if _font_style(actual) else None
+            if font_size:
+                available_lines = int(
+                    (actual.height / _EMU_PER_INCH * 72) / (font_size.pt * 1.3)
+                )
+                if _estimated_line_count(actual) > available_lines:
+                    findings.append(
+                        _visual_finding(
+                            "Editable text is likely to overflow its approved visual region",
+                            slide_number=slide_number,
+                            shape_name=shape_name,
+                        )
+                    )
+    return findings
+
+
 def validate_case_study_deck(
     deck_path: Path,
     request: CaseStudyRequest,
@@ -76,6 +236,8 @@ def validate_case_study_deck(
     )
     result = validate_presentation(deck_path=deck_path, policy_path=policy_path, request=request)
     findings = list(result.findings)
+    if result.approved:
+        findings.extend(_visual_brand_findings(deck_path))
     if not evidence_paths:
         findings.append(
             ValidationFinding(
@@ -129,7 +291,7 @@ def validate_case_study_deck(
     name="validate_case_study_deck",
     description=(
         "Deterministically validate a session PPTX against the canonical template, safety policy, "
-        "and the source evidence paths used to create it."
+        "source evidence paths, and approved visual brand layout."
     ),
     approval_mode="never_require",
 )

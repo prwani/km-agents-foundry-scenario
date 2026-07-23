@@ -32,6 +32,7 @@ class FindingCode(StrEnum):
     SENSITIVE_INFORMATION = "sensitive_information"
     CUSTOMER_NAME_NOT_APPROVED = "customer_name_not_approved"
     UNSUPPORTED_EVIDENCE = "unsupported_evidence"
+    VISUAL_BRAND_VIOLATION = "visual_brand_violation"
     INVALID_FILE = "invalid_file"
     INCONCLUSIVE = "inconclusive"
 

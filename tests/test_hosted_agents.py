@@ -27,6 +27,12 @@ class HostedAgentTests(unittest.TestCase):
                 "CASE_STUDY_TEMPLATE_PATH": str(
                     ROOT / "assets" / "templates" / "contoso-case-study-template.pptx"
                 ),
+                "CASE_STUDY_BRAND_GUIDELINES_PATH": str(
+                    ROOT
+                    / "assets"
+                    / "templates"
+                    / "contoso-case-study-template-with-brand-guidelines.pptx"
+                ),
                 "AGENT_WORKSPACE_ROOT": workspace,
             },
             clear=False,
@@ -46,6 +52,8 @@ class HostedAgentTests(unittest.TestCase):
         self.assertIn("extract_uploaded_evidence", str(captured["tools"][0]))
         self.assertIn("generate_case_study_deck", str(captured["tools"][1]))
         self.assertIn("validate_case_study_deck", str(captured["tools"][2]))
+        self.assertIn("brand-guidelines reference", captured["agent_instructions"])
+        self.assertIn("only the eight canonical case-study slides", captured["agent_instructions"])
         generation_schema = captured["tools"][1].input_model.model_json_schema()
         self.assertIn("architecture_components", str(generation_schema))
         self.assertIn("measurable_outcomes", str(generation_schema))

@@ -2,6 +2,7 @@ import json
 import pathlib
 import tempfile
 import unittest
+from zipfile import ZipFile
 
 from pptx import Presentation
 
@@ -16,6 +17,9 @@ from km_agents.pptx_skill.validation import validate_presentation
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "assets" / "templates" / "contoso-case-study-template.pptx"
+BRAND_GUIDELINES = (
+    ROOT / "assets" / "templates" / "contoso-case-study-template-with-brand-guidelines.pptx"
+)
 POLICY = ROOT / "assets" / "templates" / "contoso-template-policy.json"
 
 
@@ -55,6 +59,14 @@ def make_content(customer_name: str = "Fabrikam") -> CaseStudyContent:
 class PptxSkillTests(unittest.TestCase):
     def test_template_and_policy_are_versioned(self):
         self.assertTrue(TEMPLATE.is_file())
+        self.assertTrue(BRAND_GUIDELINES.is_file())
+        self.assertEqual(len(Presentation(BRAND_GUIDELINES).slides), 22)
+        with ZipFile(TEMPLATE) as template, ZipFile(BRAND_GUIDELINES) as brand_guidelines:
+            for slide_number in range(1, 9):
+                self.assertEqual(
+                    template.read(f"ppt/slides/slide{slide_number}.xml"),
+                    brand_guidelines.read(f"ppt/slides/slide{slide_number}.xml"),
+                )
         policy = json.loads(POLICY.read_text(encoding="utf-8"))
         self.assertEqual(policy["slide_count"], 8)
         self.assertEqual(policy["policy_version"], "1.0.0")
@@ -89,6 +101,21 @@ class PptxSkillTests(unittest.TestCase):
             self.assertEqual(
                 generated_shape.text_frame.paragraphs[0].runs[0].font.color.rgb,
                 template_shape.text_frame.paragraphs[0].runs[0].font.color.rgb,
+                shape_name,
+            )
+            self.assertEqual(
+                generated_shape.text_frame.paragraphs[0].runs[0].font.name,
+                template_shape.text_frame.paragraphs[0].runs[0].font.name,
+                shape_name,
+            )
+            self.assertEqual(
+                generated_shape.text_frame.paragraphs[0].runs[0].font.size,
+                template_shape.text_frame.paragraphs[0].runs[0].font.size,
+                shape_name,
+            )
+            self.assertEqual(
+                generated_shape.text_frame.paragraphs[0].alignment,
+                template_shape.text_frame.paragraphs[0].alignment,
                 shape_name,
             )
 

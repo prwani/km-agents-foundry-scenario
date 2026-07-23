@@ -3,6 +3,10 @@
 **/__pycache__/
 **/*.py[cod]
 **/*.egg-info/
+.venv/
+.venv/**
+**/.venv/
+**/.venv/**
 km_portal/
 km_agents/agents/hosted/orchestrator/
 km_agents/agents/hosted/validator/

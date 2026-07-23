@@ -39,7 +39,7 @@ The Entra-authenticated KM portal accepts up to ten validated DOCX, PDF, PPTX, o
 | `src/km_agents/agents/hosted/` | Hosted-agent entrypoints |
 | `skills/pptx/` | Repository-owned PowerPoint skill |
 | `src/km_agents/pptx_skill/` | Template generation, deck generation, and deterministic validation |
-| `assets/templates/` | Eight-slide output template, 22-slide Contoso brand-guidelines reference, and versioned validation policy |
+| `assets/templates/` | Eight-slide output template, 22-slide Contoso brand-guidelines reference deck, extracted `contoso-brand-guidelines.md` summary, and versioned validation policy |
 | `assets/brand/` | Contoso logo and brand tokens |
 | `evaluation/corpus/v1/` | Reproducible synthetic DOCX/PPTX/PDF/XLSX evidence and 12-case manifest |
 | `scripts/report_evaluation.py` | Fail-closed 72-run synthetic evaluation report generator |
@@ -48,7 +48,9 @@ The Entra-authenticated KM portal accepts up to ten validated DOCX, PDF, PPTX, o
 | `tests/` | Offline contract, template, security, and infrastructure tests |
 
 See [docs/agent-testing.md](docs/agent-testing.md) for Foundry Playground and
-PowerShell testing instructions.
+PowerShell testing instructions. See
+[docs/brand-guidelines.md](docs/brand-guidelines.md) for how the Hosted agent
+consumes brand guidance and how to update it when the brand deck changes.
 
 ## VS Code Hosted-agent control deployment
 

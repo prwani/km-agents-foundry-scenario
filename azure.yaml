@@ -27,6 +27,7 @@ services:
         codeConfiguration:
             entryPoint: main.py
             runtime: python_3_13
+            dependency_resolution: remote_build
         container:
             resources:
                 cpu: "0.5"
@@ -38,7 +39,7 @@ services:
             - name: CASE_STUDY_TEMPLATE_PATH
               value: assets/templates/contoso-case-study-template.pptx
             - name: CASE_STUDY_BRAND_GUIDELINES_PATH
-              value: assets/templates/contoso-case-study-template-with-brand-guidelines.pptx
+              value: assets/templates/contoso-brand-guidelines.md
             - name: PPTX_SKILL_PATH
               value: skills/pptx
             - name: HARNESS_MAX_ITERATIONS

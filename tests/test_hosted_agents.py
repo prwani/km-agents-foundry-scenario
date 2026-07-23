@@ -28,10 +28,7 @@ class HostedAgentTests(unittest.TestCase):
                     ROOT / "assets" / "templates" / "contoso-case-study-template.pptx"
                 ),
                 "CASE_STUDY_BRAND_GUIDELINES_PATH": str(
-                    ROOT
-                    / "assets"
-                    / "templates"
-                    / "contoso-case-study-template-with-brand-guidelines.pptx"
+                    ROOT / "assets" / "templates" / "contoso-brand-guidelines.md"
                 ),
                 "AGENT_WORKSPACE_ROOT": workspace,
             },
@@ -54,6 +51,8 @@ class HostedAgentTests(unittest.TestCase):
         self.assertIn("validate_case_study_deck", str(captured["tools"][2]))
         self.assertIn("brand-guidelines reference", captured["agent_instructions"])
         self.assertIn("only the eight canonical case-study slides", captured["agent_instructions"])
+        self.assertIn("BRAND PROMISE", captured["agent_instructions"])
+        self.assertIn("Build trust. Prove value. Scale responsibly.", captured["agent_instructions"])
         generation_schema = captured["tools"][1].input_model.model_json_schema()
         self.assertIn("architecture_components", str(generation_schema))
         self.assertIn("measurable_outcomes", str(generation_schema))
@@ -64,6 +63,24 @@ class HostedAgentTests(unittest.TestCase):
         with patch.dict(os.environ, {"MAX_REPAIR_ATTEMPTS": "3"}, clear=False):
             with self.assertRaises(ConfigurationError):
                 generator._max_repair_attempts()
+
+    def test_missing_brand_guidelines_summary_fails_closed(self):
+        with tempfile.TemporaryDirectory() as workspace, patch.dict(
+            os.environ,
+            {
+                "PPTX_SKILL_PATH": str(ROOT / "skills" / "pptx"),
+                "CASE_STUDY_TEMPLATE_PATH": str(
+                    ROOT / "assets" / "templates" / "contoso-case-study-template.pptx"
+                ),
+                "CASE_STUDY_BRAND_GUIDELINES_PATH": str(
+                    pathlib.Path(workspace) / "does-not-exist.md"
+                ),
+                "AGENT_WORKSPACE_ROOT": workspace,
+            },
+            clear=False,
+        ), patch.object(generator, "create_harness_agent", side_effect=AssertionError("should not be called")):
+            with self.assertRaises(ConfigurationError):
+                generator.create_generator_harness(object())
 
     def test_validation_rejects_paths_outside_session_workspace(self):
         with tempfile.TemporaryDirectory() as workspace, patch.dict(

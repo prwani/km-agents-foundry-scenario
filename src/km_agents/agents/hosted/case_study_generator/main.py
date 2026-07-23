@@ -42,11 +42,16 @@ def create_generator_harness(client: Any) -> Any:
     brand_guidelines_path = Path(
         os.getenv(
             "CASE_STUDY_BRAND_GUIDELINES_PATH",
-            "assets/templates/contoso-case-study-template-with-brand-guidelines.pptx",
+            "assets/templates/contoso-brand-guidelines.md",
         )
     ).resolve()
     if not brand_guidelines_path.is_file():
-        raise ConfigurationError(f"Contoso brand-guidelines template is missing: {brand_guidelines_path}")
+        raise ConfigurationError(f"Contoso brand-guidelines summary is missing: {brand_guidelines_path}")
+    # The file-access tool is sandboxed to AGENT_WORKSPACE_ROOT, so the model cannot open this
+    # path itself. Read the extracted guidance text now and embed it directly in the agent's
+    # instructions instead. Regenerate this file with scripts/extract_brand_guidelines.py
+    # whenever the brand deck changes.
+    brand_guidelines_text = brand_guidelines_path.read_text(encoding="utf-8").strip()
 
     workspace = Path(os.getenv("AGENT_WORKSPACE_ROOT", str(Path.home() / "data"))).resolve()
     max_repairs = _max_repair_attempts()
@@ -57,12 +62,12 @@ def create_generator_harness(client: Any) -> Any:
         agent_instructions=(
             "Complete the entire case-study workflow yourself. Generate an eight-slide Contoso "
             f"Limited case-study deck from user-uploaded files under input/ using the canonical "
-            f"template at {template_path} and follow the Contoso brand-guidelines reference at "
-            f"{brand_guidelines_path}. The output contains only the eight canonical case-study "
-            "slides, not the reference deck's guidance slides. Preserve the template typography, "
-            "approved palette and contrast, safe margins, flat visual style, source-labelled "
-            "data treatment, and clear, credible, human, responsible voice. First call "
-            "extract_uploaded_evidence for every source "
+            f"template at {template_path}. The output contains only the eight canonical "
+            "case-study slides, never the brand-guidelines reference slides below. Preserve the "
+            "template typography, approved palette and contrast, safe margins, flat visual style, "
+            "source-labelled data treatment, and clear, credible, human, responsible voice as "
+            "defined in the Contoso brand guidelines reproduced at the end of these instructions. "
+            "First call extract_uploaded_evidence for every source "
             "file, then use only the extracted evidence to populate every field of the "
             "generate_case_study_deck content schema. When the request does not approve the "
             "customer name, use Customer and never place the raw customer name in any content field. "
@@ -76,7 +81,10 @@ def create_generator_harness(client: Any) -> Any:
             "is approved. For a failed validation, repair only from the supplied evidence and retry "
             f"at most {max_repairs} times. If the original request JSON is missing, validation is "
             "inconclusive, reports sensitive information, or remains unsuccessful, delete the "
-            "draft and fail closed without returning a deck."
+            "draft and fail closed without returning a deck.\n\n"
+            "--- Contoso brand guidelines (reference only; never copy this section into the output deck) ---\n"
+            f"{brand_guidelines_text}\n"
+            "--- end Contoso brand guidelines ---"
         ),
         tools=[
             extract_uploaded_evidence_tool,

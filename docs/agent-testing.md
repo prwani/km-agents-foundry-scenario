@@ -276,6 +276,25 @@ Continue only when `azd ai agent show` reports an active version and has
 written the `AGENT_HOSTED_CASE_STUDY_AGENT_*` values to the active azd
 environment.
 
+**Known packaging bug (azd `azure.ai.agents` extension 1.0.0-beta.6):**
+`azd deploy hosted-case-study-agent` currently fails with `code package too
+large: 289 MB (max 250 MB)` even when `azure.yaml` sets
+`codeConfiguration.dependency_resolution: remote_build` (the field name is
+`dependency_resolution`, snake_case, despite the camelCase example in
+Microsoft's public docs). The extension still computes package size from a
+fully dependency-bundled build before honoring `remote_build`. Until this is
+fixed upstream, use the direct-SDK workaround instead, which builds a
+dependency-free zip (source files only, ~70 KB) and calls the same
+`create_version_from_code` API azd uses internally:
+
+```powershell
+python scripts/deploy_hosted_sdk.py --environment <azd-environment-name>
+```
+
+Re-check `azd deploy hosted-case-study-agent --no-prompt` periodically — once
+the extension respects `dependency_resolution` for its size precheck, this
+workaround can be retired.
+
 ### Upload, invoke, download, and clean up
 
 ```powershell

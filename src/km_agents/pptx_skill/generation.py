@@ -10,6 +10,9 @@ from km_agents.contracts import CaseStudyContent
 from km_agents.grounding import EVIDENCE_PENDING
 
 
+_EMU_PER_INCH = 914400
+
+
 def _replace_text(shape: object, value: str) -> None:
     if not getattr(shape, "has_text_frame", False):
         raise ValueError(f"Editable shape has no text frame: {shape.name}")
@@ -26,6 +29,35 @@ def _replace_text(shape: object, value: str) -> None:
     for extra_paragraph in frame.paragraphs[1:]:
         for run in extra_paragraph.runs:
             run.text = ""
+
+
+def _fits_text_region(shape: object, value: str) -> bool:
+    frame = shape.text_frame
+    paragraph = frame.paragraphs[0]
+    if not paragraph.runs or paragraph.runs[0].font.size is None:
+        return True
+    font_size = paragraph.runs[0].font.size.pt
+    characters_per_line = max(
+        1,
+        int((shape.width / _EMU_PER_INCH * 72) / (font_size * 0.52)),
+    )
+    estimated_lines = sum(
+        max(1, (len(line) + characters_per_line - 1) // characters_per_line)
+        for line in value.splitlines()
+        if line.strip()
+    )
+    available_lines = int((shape.height / _EMU_PER_INCH * 72) / (font_size * 1.3))
+    return estimated_lines <= available_lines
+
+
+def _fit_evidence_excerpt(shape: object, value: str) -> str:
+    words = value.split()
+    while words:
+        excerpt = " ".join(words)
+        if _fits_text_region(shape, excerpt):
+            return excerpt
+        words.pop()
+    return EVIDENCE_PENDING
 
 
 def _template_items(items: list[str], count: int) -> list[str]:
@@ -70,10 +102,15 @@ def generate_case_study(
     for index in range(1, 4):
         replacements[f"editable:s6:outcome-{index}"] = outcomes[index - 1]
     replaced: list[str] = []
+    overflow_truncated: list[str] = []
     for slide in presentation.slides:
         for shape in slide.shapes:
             if shape.name in replacements:
-                _replace_text(shape, replacements[shape.name])
+                value = replacements[shape.name]
+                if value != EVIDENCE_PENDING and not _fits_text_region(shape, value):
+                    value = _fit_evidence_excerpt(shape, value)
+                    overflow_truncated.append(shape.name)
+                _replace_text(shape, value)
                 replaced.append(shape.name)
 
     missing = sorted(set(replacements) - set(replaced))
@@ -86,6 +123,7 @@ def generate_case_study(
         "output_sha256": hashlib.sha256(output_path.read_bytes()).hexdigest(),
         "output_size_bytes": output_path.stat().st_size,
         "replaced_shapes": sorted(replaced),
+        "overflow_truncated_shapes": sorted(overflow_truncated),
         "provenance_files": content.provenance_files,
     }
     if report_path:

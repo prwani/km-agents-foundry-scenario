@@ -96,6 +96,8 @@ def build_tools(
             )
             tools.append(CodeInterpreterTool(container=container))
         elif tool_type == "a2a_preview":
+            # For RemoteA2A-category connections, Foundry auto-resolves the agent card
+            # path from the connection target; do not set agent_card_path/base_url here.
             tools.append(
                 A2APreviewTool(
                     project_connection_id=resolve_environment(tool["project_connection_id"])

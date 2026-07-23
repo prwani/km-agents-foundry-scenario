@@ -72,6 +72,8 @@ def create_generator_harness(client: Any) -> Any:
             "generate_case_study_deck content schema. When the request does not approve the "
             "customer name, use Customer and never place the raw customer name in any content field. "
             "For every content field, use direct source statements only; otherwise use Evidence pending. "
+            "A direct source statement may be a contiguous verbatim phrase, clause, or sentence; "
+            "select the shortest evidence-backed excerpt that fits the target template region. "
             "The template requires three architecture entries, four implementation steps, three outcomes, "
             "and two next steps; repeat Evidence pending for any unsupported required slot. "
             "Call generate_case_study_deck with the original request JSON to create one PPTX under output/, preserving every protected "

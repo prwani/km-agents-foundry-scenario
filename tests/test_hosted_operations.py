@@ -60,7 +60,7 @@ class HostedOperationsTests(unittest.TestCase):
                 )
                 result = operations.create_case_study_deck_tool(
                     content.model_dump(),
-                    "case-study.pptx",
+                    "output/case-study.pptx",
                     CaseStudyRequest(
                         customer_name="Fabrikam",
                         opportunity_summary="Modernize customer service operations.",
@@ -69,7 +69,7 @@ class HostedOperationsTests(unittest.TestCase):
                     ).model_dump_json(),
                 )
 
-                self.assertIn("output/case-study.pptx", result)
+                self.assertIn('"deck_path": "output/case-study.pptx"', result)
                 deck_path = workspace_path / "output" / "case-study.pptx"
                 self.assertTrue(deck_path.is_file())
                 validation = validate_case_study_deck(

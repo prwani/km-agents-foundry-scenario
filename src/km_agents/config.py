@@ -46,6 +46,8 @@ class RuntimeSettings:
     allowed_public_ips: tuple[str, ...]
     prompt_orchestrator_agent_name: str | None = None
     hosted_orchestrator_agent_name: str | None = None
+    workflow_generator_agent_name: str | None = None
+    workflow_validator_agent_name: str | None = None
     template_policy_path: str = "assets/templates/contoso-template-policy.json"
     max_repair_attempts: int = 2
 
@@ -57,6 +59,12 @@ class RuntimeSettings:
             allowed_public_ips=tuple(parse_allowed_public_ips(os.getenv("ALLOWED_PUBLIC_IPS"))),
             prompt_orchestrator_agent_name=os.getenv("PROMPT_ORCHESTRATOR_AGENT_NAME"),
             hosted_orchestrator_agent_name=os.getenv("HOSTED_ORCHESTRATOR_AGENT_NAME"),
+            workflow_generator_agent_name=os.getenv(
+                "WORKFLOW_GENERATOR_AGENT_NAME", "km-prompt-case-study-generator"
+            ),
+            workflow_validator_agent_name=os.getenv(
+                "WORKFLOW_VALIDATOR_AGENT_NAME", "km-prompt-validator"
+            ),
             template_policy_path=os.getenv(
                 "TEMPLATE_POLICY_PATH",
                 "assets/templates/contoso-template-policy.json",

@@ -84,7 +84,7 @@ class PortalContractTests(unittest.TestCase):
     def test_capabilities_expose_direct_upload_limits(self):
         response = self.client.get("/api/capabilities")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["implementations"], ["prompt", "hosted"])
+        self.assertEqual(response.json()["implementations"], ["prompt", "hosted", "workflow"])
         self.assertEqual(response.json()["max_source_files"], 10)
         self.assertEqual(response.json()["download_ttl_seconds"], 900)
 

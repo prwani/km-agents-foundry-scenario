@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class ImplementationKind(StrEnum):
     PROMPT = "prompt"
     HOSTED = "hosted"
+    WORKFLOW = "workflow"
 
 
 class SourceFileKind(StrEnum):

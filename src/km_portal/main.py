@@ -118,7 +118,11 @@ def readyz() -> dict[str, str]:
 @app.get("/api/capabilities", response_model=CapabilityResponse)
 def capabilities() -> CapabilityResponse:
     return CapabilityResponse(
-        implementations=(ImplementationKind.PROMPT, ImplementationKind.HOSTED),
+        implementations=(
+            ImplementationKind.PROMPT,
+            ImplementationKind.HOSTED,
+            ImplementationKind.WORKFLOW,
+        ),
         supported_extensions=("docx", "pptx", "pdf", "xlsx"),
         max_source_files=MAX_SOURCE_FILES,
         max_file_size_bytes=MAX_SOURCE_FILE_BYTES,

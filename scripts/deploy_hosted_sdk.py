@@ -16,7 +16,7 @@ zip (source files only), matching the `codeConfiguration` and
 fixed upstream -- re-check with `azd deploy hosted-case-study-agent` first.
 
 Usage:
-    python scripts/deploy_hosted_sdk.py --environment km-agents-eus2-probe
+    python scripts/deploy_hosted_sdk.py --environment km-agents-eus2-probe --work-dir <non-temp-directory>
 
 Requires an active `az login` / `azd auth login` identity with the
 "Foundry Project Manager" (or equivalent) role on the target project.
@@ -29,7 +29,6 @@ import hashlib
 import json
 import subprocess
 import sys
-import tempfile
 import time
 import zipfile
 from pathlib import Path
@@ -88,9 +87,10 @@ def _azd_env_values(environment: str) -> dict[str, str]:
     return values
 
 
-def _build_zip() -> Path:
-    tmp_dir = Path(tempfile.mkdtemp(prefix="km-hosted-deploy-"))
-    zip_path = tmp_dir / "hosted-case-study-agent.zip"
+def _build_zip(work_dir: Path) -> Path:
+    work_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = work_dir / "hosted-case-study-agent.zip"
+    zip_path.unlink(missing_ok=True)
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         for rel in INCLUDE_PATHS:
             src = SRC_ROOT / rel
@@ -110,6 +110,12 @@ def _build_zip() -> Path:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--environment", required=True, help="azd environment name")
+    parser.add_argument(
+        "--work-dir",
+        type=Path,
+        required=True,
+        help="Existing non-temporary directory used for the transient source zip.",
+    )
     args = parser.parse_args()
 
     env_values = _azd_env_values(args.environment)
@@ -124,7 +130,7 @@ def main() -> None:
             "to inspect available values."
         )
 
-    zip_path = _build_zip()
+    zip_path = _build_zip(args.work_dir.resolve())
     code = zip_path.read_bytes()
 
     env_vars = dict(ENVIRONMENT_VARIABLES)

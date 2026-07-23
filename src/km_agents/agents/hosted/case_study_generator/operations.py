@@ -180,7 +180,10 @@ def create_case_study_deck_tool(
         raise ValueError("Output filename must be a relative .pptx path")
     workspace = _workspace()
     output_root = (workspace / "output").resolve()
-    output_path = (output_root / output_filename).resolve()
+    requested_path = Path(output_filename)
+    if requested_path.parts and requested_path.parts[0].casefold() == "output":
+        requested_path = Path(*requested_path.parts[1:])
+    output_path = (output_root / requested_path).resolve()
     if output_root not in output_path.parents or output_path.suffix.lower() != ".pptx":
         raise ValueError("Output filename must be a .pptx path under output/")
 
@@ -196,7 +199,7 @@ def create_case_study_deck_tool(
     report = generate_case_study(template_path, output_path, normalized_content)
     return json.dumps(
         {
-            "deck_path": f"output/{output_filename}",
+            "deck_path": f"output/{requested_path.as_posix()}",
             "report": report,
             "suppressed_unsupported_content_fields": suppressed_outcomes,
             "redacted_customer_name_occurrences": redacted_customer_name_occurrences,

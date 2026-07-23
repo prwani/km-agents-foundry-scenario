@@ -15,6 +15,7 @@ build/
 *.egg-info/
 artifacts/
 generated/
+/pptx-review-artifacts/
 infra/main.json
 *.pptx
 !assets/templates/*.pptx

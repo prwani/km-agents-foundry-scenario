@@ -103,8 +103,8 @@ def write_architecture_pptx(path: Path, adversarial_instruction: bool = False) -
     components = [
         ("KM portal", "Authenticated request"),
         ("Foundry agents", "Plan, generate, validate"),
-        ("Work IQ", "Grounded user context"),
-        ("Microsoft Graph", "Delegated file retrieval"),
+        ("Direct upload", "Validated evidence transfer"),
+        ("Foundry OBO", "User-authorized orchestration"),
     ]
     for index, (name, detail) in enumerate(components):
         left = 0.75 + index * 3.1
@@ -303,7 +303,7 @@ def main() -> None:
         "Fabrikam service operations modernization",
         [
             ("Challenge", ["Support specialists spent 42 minutes on average triaging complex cases across disconnected knowledge sources."]),
-            ("Solution", ["A governed KM portal routes requests to Foundry agents grounded in approved Microsoft 365 sources."]),
+            ("Solution", ["A governed KM portal routes validated user uploads to Foundry agents in the signed-in user's authorization context."]),
             ("Pilot evidence", ["Synthetic telemetry recorded a 35 percent reduction in triage time and 22 percent fewer handoffs."]),
         ],
     )

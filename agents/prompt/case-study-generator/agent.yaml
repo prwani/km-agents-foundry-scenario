@@ -4,6 +4,4 @@ model: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
 instructions_file: instructions.md
 tools:
   - type: code_interpreter
-  - type: work_iq_preview
-    project_connection_id: ${WORK_IQ_PROJECT_CONNECTION_ID}
 temperature: 0.2

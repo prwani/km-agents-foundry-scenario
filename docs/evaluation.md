@@ -2,7 +2,7 @@
 
 Run the versioned synthetic corpus three times through both isolated stacks after the
 tenant configuration and Hosted session transfer adapter are available. Do not upload
-production Microsoft 365 content or generated customer decks into this workflow.
+production content or generated customer decks into this workflow.
 
 Each JSONL result record must include the following metadata only:
 

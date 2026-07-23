@@ -7,4 +7,4 @@ The repository implements two isolated agent graphs:
 - Prompt agents with Code Interpreter.
 - Hosted Python agents, with Agent Framework Harness only in the hosted case-study generator.
 
-Never add credentials, tokens, Microsoft 365 content, generated customer decks, or customer-sensitive data to source control.
+Never add credentials, tokens, uploaded content, generated customer decks, or customer-sensitive data to source control.

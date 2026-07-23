@@ -1,6 +1,6 @@
 # Cleanup
 
-Use `azd down` only after confirming that all generated artifacts in Microsoft 365 are either retained according to policy or deleted by the owning user.
+Use `azd down` only after confirming that required generated artifacts have been downloaded or deleted.
 
 Expected cleanup:
 
@@ -10,4 +10,4 @@ Expected cleanup:
 - Log Analytics and Application Insights resources.
 - Managed identities and role assignments.
 
-Operator-owned tenant artifacts such as Entra applications, admin consent grants, Work IQ service principal setup, and Microsoft 365 Copilot publication entries may require separate cleanup by tenant administrators.
+Operator-owned tenant artifacts such as the Entra portal application, its secret, and Cognitive Services User group assignment may require separate cleanup by tenant administrators.

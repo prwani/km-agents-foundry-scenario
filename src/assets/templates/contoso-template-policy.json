@@ -1,0 +1,818 @@
+{
+  "policy_version": "1.0.0",
+  "template_sha256": "d03fc7476a040db53c48886aa7e5f8e5c2543a53468b7aed9b851b0e1c2dd3f9",
+  "slide_count": 8,
+  "slides": [
+    {
+      "slide_number": 1,
+      "editable_shapes": [
+        "editable:s1:customer-name",
+        "editable:s1:subtitle",
+        "editable:s1:title"
+      ],
+      "protected_shapes": {
+        "protected:s1:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s1:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s1:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s1:accent-panel": {
+          "shape_type": 1,
+          "left": 8823960,
+          "top": 0,
+          "width": 3367735,
+          "height": 6858000,
+          "text": ""
+        },
+        "protected:s1:accent-orbit-1": {
+          "shape_type": 1,
+          "left": 9372600,
+          "top": 1234440,
+          "width": 1417320,
+          "height": 1417320,
+          "text": ""
+        },
+        "protected:s1:accent-orbit-2": {
+          "shape_type": 1,
+          "left": 10222992,
+          "top": 3840480,
+          "width": 713232,
+          "height": 713232,
+          "text": ""
+        },
+        "protected:s1:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s1:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "01"
+        }
+      }
+    },
+    {
+      "slide_number": 2,
+      "editable_shapes": [
+        "editable:s2:challenge",
+        "editable:s2:context"
+      ],
+      "protected_shapes": {
+        "protected:s2:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s2:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s2:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s2:title": {
+          "shape_type": 17,
+          "left": 594360,
+          "top": 987552,
+          "width": 10927080,
+          "height": 530352,
+          "text": "The customer challenge"
+        },
+        "protected:s2:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s2:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "02"
+        },
+        "protected:s2:challenge-card": {
+          "shape_type": 1,
+          "left": 640080,
+          "top": 1783080,
+          "width": 6537960,
+          "height": 4114800,
+          "text": ""
+        },
+        "protected:s2:context-panel": {
+          "shape_type": 1,
+          "left": 7543800,
+          "top": 1783080,
+          "width": 3977639,
+          "height": 4114800,
+          "text": ""
+        },
+        "protected:s2:challenge-label": {
+          "shape_type": 17,
+          "left": 960120,
+          "top": 2240280,
+          "width": 3154680,
+          "height": 320040,
+          "text": "THE CHALLENGE"
+        },
+        "protected:s2:context-label": {
+          "shape_type": 17,
+          "left": 7955279,
+          "top": 2240280,
+          "width": 3154680,
+          "height": 320040,
+          "text": "WHY NOW"
+        }
+      }
+    },
+    {
+      "slide_number": 3,
+      "editable_shapes": [
+        "editable:s3:solution",
+        "editable:s3:solution-pillars"
+      ],
+      "protected_shapes": {
+        "protected:s3:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s3:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s3:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s3:title": {
+          "shape_type": 17,
+          "left": 594360,
+          "top": 987552,
+          "width": 10927080,
+          "height": 530352,
+          "text": "Solution overview"
+        },
+        "protected:s3:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s3:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "03"
+        },
+        "protected:s3:step-1": {
+          "shape_type": 1,
+          "left": 5852160,
+          "top": 2057400,
+          "width": 1143000,
+          "height": 1143000,
+          "text": ""
+        },
+        "protected:s3:step-icon-1": {
+          "shape_type": 17,
+          "left": 6163056,
+          "top": 2414016,
+          "width": 512064,
+          "height": 274320,
+          "text": "1"
+        },
+        "protected:s3:step-label-1": {
+          "shape_type": 17,
+          "left": 5715000,
+          "top": 3401568,
+          "width": 1417320,
+          "height": 274320,
+          "text": "DISCOVER"
+        },
+        "protected:s3:step-2": {
+          "shape_type": 1,
+          "left": 7726679,
+          "top": 2057400,
+          "width": 1143000,
+          "height": 1143000,
+          "text": ""
+        },
+        "protected:s3:step-icon-2": {
+          "shape_type": 17,
+          "left": 8037575,
+          "top": 2414016,
+          "width": 512064,
+          "height": 274320,
+          "text": "2"
+        },
+        "protected:s3:step-label-2": {
+          "shape_type": 17,
+          "left": 7589519,
+          "top": 3401568,
+          "width": 1417320,
+          "height": 274320,
+          "text": "DESIGN"
+        },
+        "protected:s3:step-3": {
+          "shape_type": 1,
+          "left": 9601200,
+          "top": 2057400,
+          "width": 1143000,
+          "height": 1143000,
+          "text": ""
+        },
+        "protected:s3:step-icon-3": {
+          "shape_type": 17,
+          "left": 9912096,
+          "top": 2414016,
+          "width": 512064,
+          "height": 274320,
+          "text": "3"
+        },
+        "protected:s3:step-label-3": {
+          "shape_type": 17,
+          "left": 9464040,
+          "top": 3401568,
+          "width": 1417320,
+          "height": 274320,
+          "text": "DELIVER"
+        }
+      }
+    },
+    {
+      "slide_number": 4,
+      "editable_shapes": [
+        "editable:s4:architecture-column-1",
+        "editable:s4:architecture-column-2",
+        "editable:s4:architecture-column-3"
+      ],
+      "protected_shapes": {
+        "protected:s4:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s4:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s4:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s4:title": {
+          "shape_type": 17,
+          "left": 594360,
+          "top": 987552,
+          "width": 10927080,
+          "height": 530352,
+          "text": "Architecture"
+        },
+        "protected:s4:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s4:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "04"
+        },
+        "protected:s4:architecture-canvas": {
+          "shape_type": 1,
+          "left": 658368,
+          "top": 1737360,
+          "width": 10863072,
+          "height": 4343400,
+          "text": ""
+        },
+        "protected:s4:column-1": {
+          "shape_type": 1,
+          "left": 1005840,
+          "top": 2240280,
+          "width": 2743200,
+          "height": 3154680,
+          "text": ""
+        },
+        "protected:s4:column-label-1": {
+          "shape_type": 17,
+          "left": 1234440,
+          "top": 2514600,
+          "width": 2286000,
+          "height": 274320,
+          "text": "EXPERIENCE"
+        },
+        "protected:s4:column-2": {
+          "shape_type": 1,
+          "left": 4343400,
+          "top": 2240280,
+          "width": 2743200,
+          "height": 3154680,
+          "text": ""
+        },
+        "protected:s4:column-label-2": {
+          "shape_type": 17,
+          "left": 4572000,
+          "top": 2514600,
+          "width": 2286000,
+          "height": 274320,
+          "text": "INTELLIGENCE"
+        },
+        "protected:s4:column-3": {
+          "shape_type": 1,
+          "left": 7680960,
+          "top": 2240280,
+          "width": 2743200,
+          "height": 3154680,
+          "text": ""
+        },
+        "protected:s4:column-label-3": {
+          "shape_type": 17,
+          "left": 7909560,
+          "top": 2514600,
+          "width": 2286000,
+          "height": 274320,
+          "text": "DATA & ACTIONS"
+        }
+      }
+    },
+    {
+      "slide_number": 5,
+      "editable_shapes": [
+        "editable:s5:implementation-step-1",
+        "editable:s5:implementation-step-2",
+        "editable:s5:implementation-step-3",
+        "editable:s5:implementation-step-4"
+      ],
+      "protected_shapes": {
+        "protected:s5:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s5:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s5:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s5:title": {
+          "shape_type": 17,
+          "left": 594360,
+          "top": 987552,
+          "width": 10927080,
+          "height": 530352,
+          "text": "Implementation journey"
+        },
+        "protected:s5:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s5:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "05"
+        },
+        "protected:s5:timeline-track": {
+          "shape_type": 1,
+          "left": 1531620,
+          "top": 3127248,
+          "width": 8229600,
+          "height": 109728,
+          "text": ""
+        },
+        "protected:s5:milestone-1": {
+          "shape_type": 1,
+          "left": 1143000,
+          "top": 2788920,
+          "width": 777240,
+          "height": 777240,
+          "text": ""
+        },
+        "protected:s5:milestone-number-1": {
+          "shape_type": 17,
+          "left": 1325880,
+          "top": 2990088,
+          "width": 411480,
+          "height": 201168,
+          "text": "1"
+        },
+        "protected:s5:milestone-2": {
+          "shape_type": 1,
+          "left": 3886200,
+          "top": 2788920,
+          "width": 777240,
+          "height": 777240,
+          "text": ""
+        },
+        "protected:s5:milestone-number-2": {
+          "shape_type": 17,
+          "left": 4069080,
+          "top": 2990088,
+          "width": 411480,
+          "height": 201168,
+          "text": "2"
+        },
+        "protected:s5:milestone-3": {
+          "shape_type": 1,
+          "left": 6629400,
+          "top": 2788920,
+          "width": 777240,
+          "height": 777240,
+          "text": ""
+        },
+        "protected:s5:milestone-number-3": {
+          "shape_type": 17,
+          "left": 6812280,
+          "top": 2990088,
+          "width": 411480,
+          "height": 201168,
+          "text": "3"
+        },
+        "protected:s5:milestone-4": {
+          "shape_type": 1,
+          "left": 9372600,
+          "top": 2788920,
+          "width": 777240,
+          "height": 777240,
+          "text": ""
+        },
+        "protected:s5:milestone-number-4": {
+          "shape_type": 17,
+          "left": 9555480,
+          "top": 2990088,
+          "width": 411480,
+          "height": 201168,
+          "text": "4"
+        }
+      }
+    },
+    {
+      "slide_number": 6,
+      "editable_shapes": [
+        "editable:s6:outcome-1",
+        "editable:s6:outcome-2",
+        "editable:s6:outcome-3"
+      ],
+      "protected_shapes": {
+        "protected:s6:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s6:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s6:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s6:title": {
+          "shape_type": 17,
+          "left": 594360,
+          "top": 987552,
+          "width": 10927080,
+          "height": 530352,
+          "text": "Measurable outcomes"
+        },
+        "protected:s6:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s6:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "06"
+        },
+        "protected:s6:metric-card-1": {
+          "shape_type": 1,
+          "left": 777240,
+          "top": 1920240,
+          "width": 3337560,
+          "height": 3429000,
+          "text": ""
+        },
+        "protected:s6:metric-icon-1": {
+          "shape_type": 1,
+          "left": 2011680,
+          "top": 2331720,
+          "width": 868680,
+          "height": 868680,
+          "text": ""
+        },
+        "protected:s6:metric-number-1": {
+          "shape_type": 17,
+          "left": 2249424,
+          "top": 2615184,
+          "width": 384048,
+          "height": 219456,
+          "text": "1"
+        },
+        "protected:s6:metric-card-2": {
+          "shape_type": 1,
+          "left": 4526279,
+          "top": 1920240,
+          "width": 3337560,
+          "height": 3429000,
+          "text": ""
+        },
+        "protected:s6:metric-icon-2": {
+          "shape_type": 1,
+          "left": 5760719,
+          "top": 2331720,
+          "width": 868680,
+          "height": 868680,
+          "text": ""
+        },
+        "protected:s6:metric-number-2": {
+          "shape_type": 17,
+          "left": 5998464,
+          "top": 2615184,
+          "width": 384048,
+          "height": 219456,
+          "text": "2"
+        },
+        "protected:s6:metric-card-3": {
+          "shape_type": 1,
+          "left": 8275319,
+          "top": 1920240,
+          "width": 3337560,
+          "height": 3429000,
+          "text": ""
+        },
+        "protected:s6:metric-icon-3": {
+          "shape_type": 1,
+          "left": 9509759,
+          "top": 2331720,
+          "width": 868680,
+          "height": 868680,
+          "text": ""
+        },
+        "protected:s6:metric-number-3": {
+          "shape_type": 17,
+          "left": 9747503,
+          "top": 2615184,
+          "width": 384048,
+          "height": 219456,
+          "text": "3"
+        },
+        "protected:s6:evidence-note": {
+          "shape_type": 17,
+          "left": 3154680,
+          "top": 5715000,
+          "width": 5897880,
+          "height": 256032,
+          "text": "Only source-supported outcomes are permitted"
+        }
+      }
+    },
+    {
+      "slide_number": 7,
+      "editable_shapes": [
+        "editable:s7:quote",
+        "editable:s7:quote-attribution"
+      ],
+      "protected_shapes": {
+        "protected:s7:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s7:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s7:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s7:quote-mark": {
+          "shape_type": 17,
+          "left": 658368,
+          "top": 1261872,
+          "width": 1005840,
+          "height": 1051560,
+          "text": "\u201c"
+        },
+        "protected:s7:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s7:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "07"
+        }
+      }
+    },
+    {
+      "slide_number": 8,
+      "editable_shapes": [
+        "editable:s8:next-steps"
+      ],
+      "protected_shapes": {
+        "protected:s8:logo-mark": {
+          "shape_type": 1,
+          "left": 502920,
+          "top": 347472,
+          "width": 411480,
+          "height": 411480,
+          "text": ""
+        },
+        "protected:s8:logo-initials": {
+          "shape_type": 17,
+          "left": 585216,
+          "top": 438912,
+          "width": 256032,
+          "height": 164592,
+          "text": "CL"
+        },
+        "protected:s8:logo-wordmark": {
+          "shape_type": 17,
+          "left": 1024128,
+          "top": 393192,
+          "width": 2057400,
+          "height": 256032,
+          "text": "CONTOSO LIMITED"
+        },
+        "protected:s8:title": {
+          "shape_type": 17,
+          "left": 685800,
+          "top": 1115568,
+          "width": 4754880,
+          "height": 594360,
+          "text": "Next steps"
+        },
+        "protected:s8:closing-panel": {
+          "shape_type": 1,
+          "left": 7635240,
+          "top": 1325880,
+          "width": 3749039,
+          "height": 4526280,
+          "text": ""
+        },
+        "protected:s8:closing-message": {
+          "shape_type": 17,
+          "left": 8001000,
+          "top": 2423160,
+          "width": 3017520,
+          "height": 1691640,
+          "text": "BUILD TRUST.\nPROVE VALUE.\nSCALE RESPONSIBLY."
+        },
+        "protected:s8:confidentiality": {
+          "shape_type": 17,
+          "left": 502920,
+          "top": 6473952,
+          "width": 2971800,
+          "height": 182880,
+          "text": "SYNTHETIC DEMO \u2022 CONTOSO LIMITED"
+        },
+        "protected:s8:slide-number": {
+          "shape_type": 17,
+          "left": 11155680,
+          "top": 6437376,
+          "width": 502920,
+          "height": 201168,
+          "text": "08"
+        }
+      }
+    }
+  ],
+  "customer_name_policy": "anonymize_unless_attested",
+  "allowed_extensions": [
+    "docx",
+    "pptx",
+    "pdf",
+    "xlsx"
+  ]
+}

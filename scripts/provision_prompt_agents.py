@@ -12,15 +12,17 @@ import yaml
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import (
     A2APreviewTool,
+    AutoCodeInterpreterToolParam,
     CodeInterpreterTool,
     PromptAgentDefinition,
-    WorkIQPreviewTool,
 )
 from azure.identity import DefaultAzureCredential
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_ROOT = ROOT / "agents" / "prompt"
+CANONICAL_TEMPLATE = ROOT / "assets" / "templates" / "contoso-case-study-template.pptx"
+VALIDATION_POLICY = ROOT / "assets" / "templates" / "contoso-template-policy.json"
 ENV_PATTERN = re.compile(r"^\$\{([A-Z][A-Z0-9_]*)\}$")
 DEPLOYMENT_ORDER = ("case-study-generator", "validator", "orchestrator")
 
@@ -77,18 +79,19 @@ def load_spec(folder: str, resolve: bool = True) -> PromptAgentSpec:
     )
 
 
-def build_tools(spec: PromptAgentSpec) -> list[object]:
+def build_tools(
+    spec: PromptAgentSpec, code_interpreter_file_ids: tuple[str, ...] = ()
+) -> list[object]:
     tools: list[object] = []
     for tool in spec.tools:
         tool_type = tool["type"]
         if tool_type == "code_interpreter":
-            tools.append(CodeInterpreterTool())
-        elif tool_type == "work_iq_preview":
-            tools.append(
-                WorkIQPreviewTool(
-                    project_connection_id=resolve_environment(tool["project_connection_id"])
-                )
+            container = (
+                AutoCodeInterpreterToolParam(file_ids=list(code_interpreter_file_ids))
+                if code_interpreter_file_ids
+                else None
             )
+            tools.append(CodeInterpreterTool(container=container))
         elif tool_type == "a2a_preview":
             tools.append(
                 A2APreviewTool(
@@ -124,15 +127,56 @@ def provision(folders: tuple[str, ...]) -> None:
     with AIProjectClient(endpoint=endpoint, credential=credential) as project:
         for folder in folders:
             spec = load_spec(folder)
-            agent = project.agents.create_version(
-                agent_name=spec.name,
-                definition=PromptAgentDefinition(
-                    model=spec.model,
-                    instructions=spec.instructions,
-                    temperature=spec.temperature,
-                    tools=build_tools(spec),
-                ),
-            )
+            attached_file_ids: list[str] = []
+            version_created = False
+            try:
+                if folder == "case-study-generator":
+                    if not CANONICAL_TEMPLATE.is_file():
+                        raise FileNotFoundError(f"Canonical template is missing: {CANONICAL_TEMPLATE}")
+                    attached_file_ids.append(
+                        project.get_openai_client()
+                        .files.create(
+                            file=(
+                                CANONICAL_TEMPLATE.name,
+                                CANONICAL_TEMPLATE.read_bytes(),
+                                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                            ),
+                            purpose="assistants",
+                        )
+                        .id
+                    )
+                elif folder == "validator":
+                    for source, content_type in (
+                        (
+                            CANONICAL_TEMPLATE,
+                            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        ),
+                        (VALIDATION_POLICY, "application/json"),
+                    ):
+                        if not source.is_file():
+                            raise FileNotFoundError(f"Validator artifact is missing: {source}")
+                        attached_file_ids.append(
+                            project.get_openai_client()
+                            .files.create(
+                                file=(source.name, source.read_bytes(), content_type),
+                                purpose="assistants",
+                            )
+                            .id
+                        )
+                agent = project.agents.create_version(
+                    agent_name=spec.name,
+                    definition=PromptAgentDefinition(
+                        model=spec.model,
+                        instructions=spec.instructions,
+                        temperature=spec.temperature,
+                        tools=build_tools(spec, tuple(attached_file_ids)),
+                    ),
+                )
+                version_created = True
+            finally:
+                if not version_created:
+                    for file_id in attached_file_ids:
+                        project.get_openai_client().files.delete(file_id)
             print(json.dumps({"name": agent.name, "version": agent.version}))
 
 

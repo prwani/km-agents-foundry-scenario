@@ -29,8 +29,11 @@ param entraPortalClientId string
 @description('Expected audience in Entra access tokens presented to the portal API.')
 param entraApiAudience string
 
+@description('Object ID of the Entra group whose members may invoke Foundry with user OBO credentials.')
+param foundryUserGroupObjectId string
+
 @secure()
-@description('Confidential-client secret used only for delegated Microsoft Graph OBO token exchange.')
+@description('Confidential-client secret used only for Foundry OBO token exchange.')
 param portalEntraClientSecret string
 
 @secure()
@@ -42,6 +45,18 @@ param vnetAddressPrefix string = '10.20.0.0/16'
 
 @description('Container Apps infrastructure subnet prefix. Must be /23 or larger.')
 param infrastructureSubnetPrefix string = '10.20.0.0/23'
+
+@description('Subnet prefix for private endpoints (Key Vault, Storage) required because a tenant policy forces those resources to publicNetworkAccess Disabled.')
+param privateEndpointSubnetPrefix string = '10.20.2.0/24'
+
+@description('Chat model deployment name. Must match AZURE_AI_MODEL_DEPLOYMENT_NAME / azure.yaml.')
+param modelDeploymentName string = 'gpt-5.4-mini'
+
+@description('Chat model version to deploy.')
+param modelDeploymentVersion string = '2026-03-17'
+
+@description('GlobalStandard SKU capacity (thousands of tokens per minute) for the chat model deployment.')
+param modelDeploymentCapacity int = 20
 
 var tags = {
   workload: 'km-agents-foundry-scenario'
@@ -61,6 +76,8 @@ var portalAppName = '${namePrefix}-km-portal'
 var portalIdentityName = '${namePrefix}-portal-id'
 var portalArtifactsStorageName = toLower(take('${replace(namePrefix, '-', '')}${uniqueString(resourceGroup().id)}artifacts', 24))
 var keyVaultName = toLower(take('${replace(namePrefix, '-', '')}${uniqueString(resourceGroup().id)}kv', 24))
+var foundryCustomSubdomainName = toLower('${replace(namePrefix, '-', '')}-${uniqueString(subscription().id, resourceGroup().id, foundryAccountName)}')
+var containerRegistryName = toLower(take('${replace(namePrefix, '-', '')}${uniqueString(resourceGroup().id)}acr', 50))
 
 resource logs 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: logAnalyticsName
@@ -92,6 +109,18 @@ resource portalIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-0
   tags: tags
 }
 
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' = {
+  name: containerRegistryName
+  location: location
+  tags: tags
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    adminUserEnabled: false
+  }
+}
+
 resource portalKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
@@ -105,13 +134,23 @@ resource portalKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enablePurgeProtection: true
     softDeleteRetentionInDays: 90
-    publicNetworkAccess: 'Enabled'
+    // A tenant-wide Azure Policy (modify effect: keyvaultpublicnetworkmodify) forces this to
+    // Disabled regardless of what is declared here, so it is declared explicitly to match the
+    // enforced reality. Access is via the private endpoint below plus RBAC; network ACLs are
+    // vestigial once public access is disabled but are left in place for defense in depth if the
+    // policy is ever relaxed.
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'None'
       defaultAction: 'Deny'
-      ipRules: [
+      ipRules: concat(configuredIpRules, [
         {
           value: portalPublicIp.properties.ipAddress
+        }
+      ])
+      virtualNetworkRules: [
+        {
+          id: infrastructureSubnet.id
         }
       ]
     }
@@ -134,7 +173,7 @@ resource artifactOwnerHashSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' 
   }
 }
 
-resource artifactStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+resource artifactStorage 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   name: portalArtifactsStorageName
   location: location
   tags: tags
@@ -148,14 +187,21 @@ resource artifactStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     allowSharedKeyAccess: false
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
-    publicNetworkAccess: 'Enabled'
+    // A tenant-wide Azure Policy (modify effect: storageaccountpublicnetworkmodify) forces this
+    // to Disabled regardless of what is declared here, so it is declared explicitly. Access is
+    // via the private endpoint below plus RBAC.
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'None'
       defaultAction: 'Deny'
-      ipRules: [
+      ipRules: [for ip in allowedPublicIps: {
+        action: 'Allow'
+        value: ip
+      }]
+      virtualNetworkRules: [
         {
           action: 'Allow'
-          value: portalPublicIp.properties.ipAddress
+          id: infrastructureSubnet.id
         }
       ]
     }
@@ -267,6 +313,140 @@ resource infrastructureSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05
     natGateway: {
       id: natGateway.id
     }
+    serviceEndpoints: [
+      {
+        service: 'Microsoft.KeyVault'
+      }
+      {
+        service: 'Microsoft.Storage.Global'
+      }
+    ]
+  }
+}
+
+// A tenant-wide Azure Policy (modify effect) forces Key Vault and Storage account
+// publicNetworkAccess to Disabled regardless of what this template requests, so both need
+// private endpoints reachable from the portal's Container Apps environment. Private endpoints
+// cannot share the Microsoft.App/environments-delegated subnet, hence a dedicated subnet.
+resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: vnet
+  name: 'private-endpoints'
+  properties: {
+    addressPrefix: privateEndpointSubnetPrefix
+    privateEndpointNetworkPolicies: 'Disabled'
+  }
+  dependsOn: [
+    infrastructureSubnet
+  ]
+}
+
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+  tags: tags
+}
+
+resource keyVaultPrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
+  parent: keyVaultPrivateDnsZone
+  name: '${vnetName}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+resource storagePrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.blob.${environment().suffixes.storage}'
+  location: 'global'
+  tags: tags
+}
+
+resource storagePrivateDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
+  parent: storagePrivateDnsZone
+  name: '${vnetName}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: '${keyVaultName}-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: privateEndpointSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${keyVaultName}-plsc'
+        properties: {
+          privateLinkServiceId: portalKeyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource keyVaultPrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
+  parent: keyVaultPrivateEndpoint
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-vaultcore-azure-net'
+        properties: {
+          privateDnsZoneId: keyVaultPrivateDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: '${portalArtifactsStorageName}-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: privateEndpointSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${portalArtifactsStorageName}-plsc'
+        properties: {
+          privateLinkServiceId: artifactStorage.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource storagePrivateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
+  parent: storagePrivateEndpoint
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-blob-storage'
+        properties: {
+          privateDnsZoneId: storagePrivateDnsZone.id
+        }
+      }
+    ]
   }
 }
 
@@ -286,6 +466,10 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
     type: 'SystemAssigned'
   }
   properties: {
+    // Required before the Foundry account can host project resources.
+    allowProjectManagement: true
+    // Projects require a globally unique custom subdomain on AIServices accounts.
+    customSubDomainName: foundryCustomSubdomainName
     publicNetworkAccess: 'Enabled'
     networkAcls: {
       defaultAction: 'Deny'
@@ -311,6 +495,26 @@ resource foundryProject 'Microsoft.CognitiveServices/accounts/projects@2025-06-0
   properties: {
     displayName: 'KM Agents'
     description: 'Prompt and hosted case-study generation agent graphs.'
+  }
+}
+
+// Chat model deployment consumed by the Prompt and Hosted agents (referenced by
+// AZURE_AI_MODEL_DEPLOYMENT_NAME). azure.yaml declares this same deployment under the
+// `ai-project` service, but this custom Bicep template doesn't use azd's pre-provision
+// hooks, so the deployment must be created explicitly here as well.
+resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
+  parent: foundry
+  name: modelDeploymentName
+  sku: {
+    name: 'GlobalStandard'
+    capacity: modelDeploymentCapacity
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: modelDeploymentName
+      version: modelDeploymentVersion
+    }
   }
 }
 
@@ -342,7 +546,9 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
 resource portalApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: portalAppName
   location: location
-  tags: tags
+  tags: union(tags, {
+    'azd-service-name': 'km-portal'
+  })
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -354,16 +560,28 @@ resource portalApp 'Microsoft.App/containerApps@2024-03-01' = {
     workloadProfileName: 'Consumption'
     configuration: {
       activeRevisionsMode: 'Single'
+      registries: [
+        {
+          server: containerRegistry.properties.loginServer
+          identity: portalIdentity.id
+        }
+      ]
+      // NOTE: Azure Container Apps' keyVaultUrl secret references are resolved by the platform
+      // control plane at deployment time from OUTSIDE the customer VNet -- they never traverse a
+      // private endpoint, even when one exists and DNS/RBAC are correctly configured. A tenant
+      // policy in this subscription forces Key Vault publicNetworkAccess to Disabled, so
+      // keyVaultUrl-based secrets can never resolve here. The values are passed directly as
+      // native Container App secrets instead (still `@secure()` params, never logged). The
+      // values are also written to Key Vault above for audit/rotation tooling, but the Container
+      // App does not depend on Key Vault being reachable to start.
       secrets: [
         {
           name: 'entra-client-secret'
-          keyVaultUrl: portalEntraSecret.properties.secretUriWithVersion
-          identity: portalIdentity.id
+          value: portalEntraClientSecret
         }
         {
           name: 'artifact-owner-hash-salt'
-          keyVaultUrl: artifactOwnerHashSecret.properties.secretUriWithVersion
-          identity: portalIdentity.id
+          value: artifactOwnerHashSalt
         }
       ]
       ingress: {
@@ -381,7 +599,11 @@ resource portalApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'FOUNDRY_PROJECT_ENDPOINT'
-              value: 'https://${foundry.name}.services.ai.azure.com/api/projects/${foundryProject.name}'
+              value: 'https://${foundryCustomSubdomainName}.services.ai.azure.com/api/projects/${foundryProject.name}'
+            }
+            {
+              name: 'PROMPT_ORCHESTRATOR_AGENT_NAME'
+              value: 'km-prompt-orchestrator'
             }
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -482,14 +704,14 @@ resource portalApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-var cognitiveServicesUserRoleId = subscriptionResourceId(
-  'Microsoft.Authorization/roleDefinitions',
-  'a97b65f3-24c7-4388-baec-2e87135dc908'
-)
-
 var storageBlobDataContributorRoleId = subscriptionResourceId(
   'Microsoft.Authorization/roleDefinitions',
   'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+)
+
+var cognitiveServicesUserRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  'a97b65f3-24c7-4388-baec-2e87135dc908'
 )
 
 var keyVaultSecretsUserRoleId = subscriptionResourceId(
@@ -497,13 +719,18 @@ var keyVaultSecretsUserRoleId = subscriptionResourceId(
   '4633458b-17de-408a-b874-0445c86b69e6'
 )
 
-resource portalFoundryUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(foundry.id, portalIdentity.id, cognitiveServicesUserRoleId)
+var acrPullRoleId = subscriptionResourceId(
+  'Microsoft.Authorization/roleDefinitions',
+  '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+)
+
+resource foundryUserGroup 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(foundry.id, foundryUserGroupObjectId, cognitiveServicesUserRoleId)
   scope: foundry
   properties: {
     roleDefinitionId: cognitiveServicesUserRoleId
-    principalId: portalIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
+    principalId: foundryUserGroupObjectId
+    principalType: 'Group'
   }
 }
 
@@ -522,6 +749,16 @@ resource portalKeyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022
   scope: portalKeyVault
   properties: {
     roleDefinitionId: keyVaultSecretsUserRoleId
+    principalId: portalIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource portalAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerRegistry.id, portalIdentity.id, acrPullRoleId)
+  scope: containerRegistry
+  properties: {
+    roleDefinitionId: acrPullRoleId
     principalId: portalIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
@@ -558,10 +795,11 @@ resource portalNetworkBudget 'Microsoft.Consumption/budgets@2023-11-01' = if (le
 
 output foundryAccountName string = foundry.name
 output foundryProjectName string = foundryProject.name
-output foundryProjectEndpoint string = 'https://${foundry.name}.services.ai.azure.com/api/projects/${foundryProject.name}'
+output foundryProjectEndpoint string = 'https://${foundryCustomSubdomainName}.services.ai.azure.com/api/projects/${foundryProject.name}'
 output kmPortalUrl string = 'https://${portalApp.properties.configuration.ingress.fqdn}'
 output portalManagedIdentityClientId string = portalIdentity.properties.clientId
 output portalStaticEgressIp string = portalPublicIp.properties.ipAddress
 output artifactStorageBlobEndpoint string = artifactStorage.properties.primaryEndpoints.blob
 output portalKeyVaultUri string = portalKeyVault.properties.vaultUri
 output configuredDeveloperAllowedPublicIps array = allowedPublicIps
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.properties.loginServer

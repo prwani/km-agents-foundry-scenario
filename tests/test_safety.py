@@ -1,6 +1,6 @@
 import unittest
 
-from km_agents.contracts import CaseStudyRequest, ImplementationKind, SourceArtifact, SourceFileKind
+from km_agents.contracts import CaseStudyRequest, ImplementationKind
 from km_agents.safety import validate_request
 
 
@@ -11,14 +11,6 @@ def request_for(summary: str) -> CaseStudyRequest:
         customer_name_approved_for_external_use=False,
         opportunity_summary=summary,
         audience="executives",
-        template_url="https://contoso.sharepoint.com/sites/km/Templates/template.pptx",
-        source_artifacts=(
-            SourceArtifact(
-                url="https://contoso.sharepoint.com/sites/km/Documents/brief.docx",
-                kind=SourceFileKind.DOCX,
-                size_bytes=1024,
-            ),
-        ),
         correlation_id="test-correlation-001",
     )
 

@@ -1,74 +1,69 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+requiredVersions:
+    extensions:
+        azure.ai.agents: '>=1.0.0-beta.4'
 name: km-agents-foundry-scenario
 metadata:
-  template: km-agents-foundry-scenario@0.1.0
-infra:
-  provider: bicep
-  path: infra
+    template: km-agents-foundry-scenario@0.1.0
 services:
-  ai-project:
-    host: azure.ai.project
-    deployments:
-      - name: gpt-4o-mini
-        model:
-          name: gpt-4o-mini
-          format: OpenAI
-          version: "2024-07-18"
-        sku:
-          name: GlobalStandard
-          capacity: 20
-  hosted-orchestrator:
-    project: .
-    host: azure.ai.agent
-    uses:
-      - ai-project
-    description: Routes requests through the hosted generator and validator using Foundry A2A.
-    codeConfiguration:
-      runtime: python_3_13
-      entryPoint: src/km_agents/agents/hosted/orchestrator/main.py
-      dependencyResolution: remote_build
-    environmentVariables:
-      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-      HOSTED_GENERATOR_A2A_CONNECTION_ID: ${HOSTED_GENERATOR_A2A_CONNECTION_ID}
-      HOSTED_VALIDATOR_A2A_CONNECTION_ID: ${HOSTED_VALIDATOR_A2A_CONNECTION_ID}
-      MAX_REPAIR_ATTEMPTS: "2"
-  hosted-case-study-generator:
-    project: .
-    host: azure.ai.agent
-    uses:
-      - ai-project
-    description: Uses Agent Framework Harness and the in-house PowerPoint skill to create template-compliant decks.
-    codeConfiguration:
-      runtime: python_3_13
-      entryPoint: src/km_agents/agents/hosted/case_study_generator/main.py
-      dependencyResolution: remote_build
-    environmentVariables:
-      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-      WORK_IQ_PROJECT_CONNECTION_ID: ${WORK_IQ_PROJECT_CONNECTION_ID}
-      CASE_STUDY_TEMPLATE_URL: ${CASE_STUDY_TEMPLATE_URL}
-      PPTX_SKILL_PATH: skills/pptx
-      HARNESS_MAX_ITERATIONS: "3"
-      HARNESS_DISABLE_WEB_SEARCH: "true"
-      HARNESS_DISABLE_SHELL: "true"
-  hosted-validator:
-    project: .
-    host: azure.ai.agent
-    uses:
-      - ai-project
-    description: Applies deterministic Open XML checks and model-assisted safety review to generated decks.
-    codeConfiguration:
-      runtime: python_3_13
-      entryPoint: src/km_agents/agents/hosted/validator/main.py
-      dependencyResolution: remote_build
-    environmentVariables:
-      AZURE_AI_MODEL_DEPLOYMENT_NAME: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
-      CASE_STUDY_TEMPLATE_URL: ${CASE_STUDY_TEMPLATE_URL}
-      TEMPLATE_POLICY_PATH: assets/templates/contoso-template-policy.json
-  km-portal:
-    project: .
-    host: containerapp
-    language: python
-    docker:
-      path: Dockerfile
-    uses:
-      - ai-project
-      - hosted-orchestrator
+    ai-project:
+        host: azure.ai.project
+        deployments:
+            - model:
+                format: OpenAI
+                name: gpt-5.4-mini
+                version: "2026-03-17"
+              name: gpt-5.4-mini
+              sku:
+                capacity: 20
+                name: GlobalStandard
+    hosted-case-study-agent:
+        project: src
+        host: azure.ai.agent
+        language: python
+        uses:
+            - ai-project
+        codeConfiguration:
+            entryPoint: main.py
+            runtime: python_3_13
+        container:
+            resources:
+                cpu: "0.5"
+                memory: 1Gi
+        description: Uses Agent Framework Harness to generate, deterministically validate, and repair case-study decks in one fail-closed workflow.
+        environmentVariables:
+            - name: AZURE_AI_MODEL_DEPLOYMENT_NAME
+              value: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+            - name: CASE_STUDY_TEMPLATE_PATH
+              value: assets/templates/contoso-case-study-template.pptx
+            - name: PPTX_SKILL_PATH
+              value: skills/pptx
+            - name: HARNESS_MAX_ITERATIONS
+              value: "3"
+            - name: HARNESS_DISABLE_WEB_SEARCH
+              value: "true"
+            - name: HARNESS_DISABLE_SHELL
+              value: "true"
+            - name: MAX_REPAIR_ATTEMPTS
+              value: "2"
+            - name: TEMPLATE_POLICY_PATH
+              value: assets/templates/contoso-template-policy.json
+        kind: hosted
+        name: km-hosted-case-study-agent
+        protocols:
+            - protocol: responses
+              version: 2.0.0
+    km-portal:
+        project: .
+        host: containerapp
+        language: python
+        docker:
+            path: Dockerfile
+            remoteBuild: true
+        uses:
+            - ai-project
+            - hosted-case-study-agent
+infra:
+    provider: bicep
+    path: infra

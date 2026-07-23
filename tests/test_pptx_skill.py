@@ -9,8 +9,6 @@ from km_agents.contracts import (
     CaseStudyContent,
     CaseStudyRequest,
     ImplementationKind,
-    SourceArtifact,
-    SourceFileKind,
 )
 from km_agents.pptx_skill.generation import generate_case_study
 from km_agents.pptx_skill.validation import validate_presentation
@@ -28,14 +26,6 @@ def make_request(approved_name: bool = True) -> CaseStudyRequest:
         customer_name_approved_for_external_use=approved_name,
         opportunity_summary="Improve service operations",
         audience="executives",
-        template_url="https://contoso.sharepoint.com/sites/km/Templates/template.pptx",
-        source_artifacts=(
-            SourceArtifact(
-                url="https://contoso.sharepoint.com/sites/km/Documents/brief.docx",
-                kind=SourceFileKind.DOCX,
-                size_bytes=1024,
-            ),
-        ),
         correlation_id="pptx-test-001",
     )
 
@@ -49,8 +39,8 @@ def make_content(customer_name: str = "Fabrikam") -> CaseStudyContent:
         architecture_components=[
             "KM portal",
             "Foundry agents",
-            "Work IQ",
-            "Microsoft Graph",
+            "Direct file upload",
+            "Foundry OBO",
             "Validation policy",
             "Application Insights",
         ],
@@ -58,7 +48,7 @@ def make_content(customer_name: str = "Fabrikam") -> CaseStudyContent:
         measurable_outcomes=["35% faster triage", "22% fewer handoffs", "100% policy checks"],
         customer_quote="The governed workflow helped our teams move faster with confidence.",
         next_steps=["Expand the synthetic corpus", "Measure adoption", "Review policy quarterly"],
-        provenance_urls=["https://contoso.sharepoint.com/sites/km/Documents/brief.docx"],
+        provenance_files=["brief.docx"],
     )
 
 
@@ -76,6 +66,31 @@ class PptxSkillTests(unittest.TestCase):
             generate_case_study(TEMPLATE, output, make_content())
             result = validate_presentation(output, POLICY, make_request())
         self.assertTrue(result.approved, result.reasons)
+
+    def test_generated_deck_preserves_template_text_colors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = pathlib.Path(directory) / "case-study.pptx"
+            generate_case_study(TEMPLATE, output, make_content())
+            template = Presentation(TEMPLATE)
+            generated = Presentation(output)
+
+        for slide_index, shape_name in (
+            (0, "editable:s1:title"),
+            (1, "editable:s2:context"),
+            (6, "editable:s7:quote"),
+            (7, "editable:s8:next-steps"),
+        ):
+            template_shape = next(
+                shape for shape in template.slides[slide_index].shapes if shape.name == shape_name
+            )
+            generated_shape = next(
+                shape for shape in generated.slides[slide_index].shapes if shape.name == shape_name
+            )
+            self.assertEqual(
+                generated_shape.text_frame.paragraphs[0].runs[0].font.color.rgb,
+                template_shape.text_frame.paragraphs[0].runs[0].font.color.rgb,
+                shape_name,
+            )
 
     def test_protected_shape_change_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

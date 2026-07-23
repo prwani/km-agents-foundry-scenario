@@ -1,0 +1,11 @@
+.env
+.env.*
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+km_portal/
+km_agents/agents/hosted/orchestrator/
+km_agents/agents/hosted/validator/
+km_agents/artifacts.py
+km_agents/evaluation.py
+km_agents/identity.py

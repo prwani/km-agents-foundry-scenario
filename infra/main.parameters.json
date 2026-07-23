@@ -7,11 +7,29 @@
     },
     "allowedPublicIps": {
       "value": [
-        "203.0.113.10"
+        "${ALLOWED_PUBLIC_IP}"
       ]
     },
     "budgetContactEmails": {
       "value": []
+    },
+    "entraTenantId": {
+      "value": "${ENTRA_TENANT_ID}"
+    },
+    "entraPortalClientId": {
+      "value": "${ENTRA_PORTAL_CLIENT_ID}"
+    },
+    "entraApiAudience": {
+      "value": "${ENTRA_API_AUDIENCE}"
+    },
+    "foundryUserGroupObjectId": {
+      "value": "${FOUNDRY_USER_GROUP_OBJECT_ID}"
+    },
+    "portalEntraClientSecret": {
+      "value": "${ENTRA_CLIENT_SECRET}"
+    },
+    "artifactOwnerHashSalt": {
+      "value": "${ARTIFACT_OWNER_HASH_SALT}"
     }
   }
 }

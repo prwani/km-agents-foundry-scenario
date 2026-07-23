@@ -4,7 +4,7 @@ import sys
 import unittest
 from unittest.mock import patch
 
-from azure.ai.projects.models import A2APreviewTool, CodeInterpreterTool, WorkIQPreviewTool
+from azure.ai.projects.models import A2APreviewTool, CodeInterpreterTool
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -25,16 +25,30 @@ class PromptProvisioningTests(unittest.TestCase):
         )
         self.assertTrue(all(spec.instructions for spec in specs))
 
-    def test_generator_builds_code_interpreter_and_work_iq_tools(self):
+    def test_generator_builds_code_interpreter_with_canonical_template_support(self):
         spec = MODULE.load_spec("case-study-generator", resolve=False)
-        with patch.dict(
-            "os.environ",
-            {"WORK_IQ_PROJECT_CONNECTION_ID": "/subscriptions/test/connections/work-iq"},
-            clear=False,
-        ):
-            tools = MODULE.build_tools(spec)
+        tools = MODULE.build_tools(spec, code_interpreter_file_ids=("file-template",))
+        self.assertEqual(len(tools), 1)
         self.assertIsInstance(tools[0], CodeInterpreterTool)
-        self.assertIsInstance(tools[1], WorkIQPreviewTool)
+        self.assertEqual(tools[0].container.file_ids, ["file-template"])
+        self.assertIn("source filenames", spec.instructions)
+        self.assertIn("Not provided in source evidence", spec.instructions)
+        self.assertIn("create no PPTX", spec.instructions)
+        self.assertIn("final Code Interpreter", spec.instructions)
+        self.assertIn("single PDF", spec.instructions)
+
+    def test_validator_builds_code_interpreter_with_template_and_policy_support(self):
+        spec = MODULE.load_spec("validator", resolve=False)
+        tools = MODULE.build_tools(
+            spec, code_interpreter_file_ids=("file-template", "file-policy")
+        )
+        self.assertEqual(tools[0].container.file_ids, ["file-template", "file-policy"])
+        self.assertIn(
+            "Informational findings alone do not reject a deck.", spec.instructions
+        )
+        self.assertIn("validation policy fingerprints as authoritative", spec.instructions)
+        self.assertIn("editable_shapes", spec.instructions)
+        self.assertIn("empty findings array must always produce `approved: true`", spec.instructions)
 
     def test_orchestrator_builds_two_a2a_tools(self):
         spec = MODULE.load_spec("orchestrator", resolve=False)
@@ -50,11 +64,11 @@ class PromptProvisioningTests(unittest.TestCase):
         self.assertEqual(len(tools), 2)
         self.assertTrue(all(isinstance(tool, A2APreviewTool) for tool in tools))
 
-    def test_missing_connection_fails_explicitly(self):
+    def test_generator_does_not_require_a_work_iq_connection(self):
         spec = MODULE.load_spec("case-study-generator", resolve=False)
         with patch.dict("os.environ", {}, clear=True):
-            with self.assertRaisesRegex(ValueError, "WORK_IQ_PROJECT_CONNECTION_ID"):
-                MODULE.build_tools(spec)
+            tools = MODULE.build_tools(spec)
+        self.assertEqual(len(tools), 1)
 
 
 if __name__ == "__main__":

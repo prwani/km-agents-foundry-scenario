@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ImplementationKind(StrEnum):
@@ -31,17 +31,9 @@ class FindingCode(StrEnum):
     REQUIRED_CONTENT_MISSING = "required_content_missing"
     SENSITIVE_INFORMATION = "sensitive_information"
     CUSTOMER_NAME_NOT_APPROVED = "customer_name_not_approved"
+    UNSUPPORTED_EVIDENCE = "unsupported_evidence"
     INVALID_FILE = "invalid_file"
     INCONCLUSIVE = "inconclusive"
-
-
-class SourceArtifact(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    url: HttpUrl
-    kind: SourceFileKind
-    size_bytes: int | None = Field(default=None, ge=1, le=20 * 1024 * 1024)
-    sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
 
 
 class CaseStudyRequest(BaseModel):
@@ -52,16 +44,7 @@ class CaseStudyRequest(BaseModel):
     customer_name_approved_for_external_use: bool = False
     opportunity_summary: str = Field(min_length=1, max_length=4000)
     audience: str = Field(min_length=1, max_length=200)
-    template_url: HttpUrl
-    source_artifacts: tuple[SourceArtifact, ...] = Field(min_length=1, max_length=10)
     correlation_id: str = Field(min_length=8, max_length=100)
-
-    @model_validator(mode="after")
-    def validate_total_size(self) -> "CaseStudyRequest":
-        known_sizes = [artifact.size_bytes for artifact in self.source_artifacts if artifact.size_bytes is not None]
-        if sum(known_sizes) > 75 * 1024 * 1024:
-            raise ValueError("combined source size cannot exceed 75 MB")
-        return self
 
     @property
     def display_customer_name(self) -> str:
@@ -75,12 +58,12 @@ class CaseStudyContent(BaseModel):
     title: str
     challenge: str
     solution_overview: str
-    architecture_components: list[str] = Field(min_length=2, max_length=6)
-    implementation_steps: list[str] = Field(min_length=3, max_length=6)
-    measurable_outcomes: list[str] = Field(min_length=2, max_length=4)
+    architecture_components: list[str] = Field(max_length=6)
+    implementation_steps: list[str] = Field(max_length=6)
+    measurable_outcomes: list[str] = Field(max_length=4)
     customer_quote: str
-    next_steps: list[str] = Field(min_length=2, max_length=4)
-    provenance_urls: list[HttpUrl]
+    next_steps: list[str] = Field(max_length=4)
+    provenance_files: list[str]
 
 
 class ValidationFinding(BaseModel):

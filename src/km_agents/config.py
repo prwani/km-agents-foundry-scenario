@@ -44,8 +44,6 @@ class RuntimeSettings:
     foundry_project_endpoint: str
     model_deployment_name: str
     allowed_public_ips: tuple[str, ...]
-    work_iq_project_connection_id: str | None = None
-    case_study_template_url: str | None = None
     prompt_orchestrator_agent_name: str | None = None
     hosted_orchestrator_agent_name: str | None = None
     template_policy_path: str = "assets/templates/contoso-template-policy.json"
@@ -57,8 +55,6 @@ class RuntimeSettings:
             foundry_project_endpoint=require_env("FOUNDRY_PROJECT_ENDPOINT"),
             model_deployment_name=require_env("AZURE_AI_MODEL_DEPLOYMENT_NAME"),
             allowed_public_ips=tuple(parse_allowed_public_ips(os.getenv("ALLOWED_PUBLIC_IPS"))),
-            work_iq_project_connection_id=os.getenv("WORK_IQ_PROJECT_CONNECTION_ID"),
-            case_study_template_url=os.getenv("CASE_STUDY_TEMPLATE_URL"),
             prompt_orchestrator_agent_name=os.getenv("PROMPT_ORCHESTRATOR_AGENT_NAME"),
             hosted_orchestrator_agent_name=os.getenv("HOSTED_ORCHESTRATOR_AGENT_NAME"),
             template_policy_path=os.getenv(

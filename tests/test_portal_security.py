@@ -2,7 +2,7 @@ import unittest
 
 from km_agents.artifacts import ArtifactNotAvailableError, InMemoryArtifactStore
 from km_agents.contracts import SourceFileKind
-from km_portal.graph import MicrosoftGraphSourceResolver, SourceRetrievalError
+from km_portal.uploads import UploadValidationError, _validate_content_signature
 
 
 class PortalSecurityTests(unittest.TestCase):
@@ -16,19 +16,13 @@ class PortalSecurityTests(unittest.TestCase):
         download = store.consume(reference.artifact_id, "owner")
         self.assertEqual(download.content, b"PK\x03\x04deck")
 
-    def test_source_url_must_be_sharepoint_or_onedrive(self):
-        with self.assertRaises(SourceRetrievalError):
-            MicrosoftGraphSourceResolver._validate_microsoft_365_url(
-                "https://example.com/private.docx"
-            )
-
     def test_source_signature_is_checked_before_agent_upload(self):
-        with self.assertRaises(SourceRetrievalError):
-            MicrosoftGraphSourceResolver._validate_content_signature(
+        with self.assertRaises(UploadValidationError):
+            _validate_content_signature(
                 b"not-an-office-document", SourceFileKind.DOCX
             )
-        with self.assertRaises(SourceRetrievalError):
-            MicrosoftGraphSourceResolver._validate_content_signature(
+        with self.assertRaises(UploadValidationError):
+            _validate_content_signature(
                 b"not-a-pdf", SourceFileKind.PDF
             )
 

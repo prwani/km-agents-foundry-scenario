@@ -29,14 +29,6 @@ def find_sensitive_markers(text: str) -> list[str]:
 
 def validate_request(request: CaseStudyRequest) -> ValidationResult:
     findings: list[ValidationFinding] = []
-    if not str(request.template_url).startswith("https://"):
-        findings.append(
-            ValidationFinding(
-                code=FindingCode.INVALID_FILE,
-                severity=FindingSeverity.ERROR,
-                message="template_url must be an HTTPS SharePoint/OneDrive reference",
-            )
-        )
     sensitive = find_sensitive_markers(" ".join([request.opportunity_summary, request.audience]))
     if sensitive:
         findings.append(

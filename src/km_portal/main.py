@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Annotated, Protocol
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Response, UploadFile, status
 from fastapi.responses import Response as BinaryResponse
 from pydantic import BaseModel
 
@@ -13,6 +13,7 @@ from km_agents.artifacts import (
     ArtifactStore,
     artifact_store_from_environment,
 )
+from km_agents.config import ConfigurationError
 from km_agents.contracts import CaseStudyRequest, CaseStudyResponse, ImplementationKind
 from km_agents.safety import validate_request
 
@@ -27,31 +28,29 @@ from .gateway import (
     OrchestrationGateway,
     gateway_from_environment,
 )
-from .graph import MicrosoftGraphSourceResolver, RetrievedSource, SourceRetrievalError
+from .uploads import (
+    MAX_SOURCE_FILES,
+    MAX_SOURCE_FILE_BYTES,
+    MAX_TOTAL_SOURCE_BYTES,
+    UploadValidationError,
+    read_uploaded_sources,
+)
 
 
 class UserAuthenticator(Protocol):
     def authenticate(self, authorization: str | None) -> AuthenticatedUser: ...
 
 
-class SourceResolver(Protocol):
-    def retrieve_template(self, user: AuthenticatedUser, template_url: str) -> RetrievedSource: ...
-
-    def retrieve(self, user: AuthenticatedUser, artifact: object) -> RetrievedSource: ...
-
-
 @dataclass(frozen=True)
 class PortalServices:
     authenticator: UserAuthenticator
-    source_resolver: SourceResolver
     artifact_store: ArtifactStore
-    gateway_factory: Callable[[CaseStudyRequest], OrchestrationGateway]
+    gateway_factory: Callable[[CaseStudyRequest, str], OrchestrationGateway]
 
     @classmethod
     def from_environment(cls) -> "PortalServices":
         return cls(
             authenticator=EntraBearerTokenValidator.from_environment(),
-            source_resolver=MicrosoftGraphSourceResolver.from_environment(),
             artifact_store=artifact_store_from_environment(),
             gateway_factory=gateway_from_environment,
         )
@@ -79,7 +78,7 @@ def _services() -> PortalServices:
         return existing
     try:
         services = PortalServices.from_environment()
-    except (AuthenticationError, SourceRetrievalError, ValueError) as exc:
+    except (AuthenticationError, ValueError) as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="KM portal identity and artifact delivery are not configured",
@@ -121,18 +120,26 @@ def capabilities() -> CapabilityResponse:
     return CapabilityResponse(
         implementations=(ImplementationKind.PROMPT, ImplementationKind.HOSTED),
         supported_extensions=("docx", "pptx", "pdf", "xlsx"),
-        max_source_files=10,
-        max_file_size_bytes=20 * 1024 * 1024,
-        max_total_source_size_bytes=75 * 1024 * 1024,
+        max_source_files=MAX_SOURCE_FILES,
+        max_file_size_bytes=MAX_SOURCE_FILE_BYTES,
+        max_total_source_size_bytes=MAX_TOTAL_SOURCE_BYTES,
         download_ttl_seconds=15 * 60,
     )
 
 
 @app.post("/api/case-studies", response_model=CaseStudyResponse)
-def create_case_study(
-    request: CaseStudyRequest,
+async def create_case_study(
+    request_json: Annotated[str, Form()],
+    source_files: Annotated[list[UploadFile], File()],
     user: AuthenticatedUser = Depends(_authenticated_user),
 ) -> CaseStudyResponse:
+    try:
+        request = CaseStudyRequest.model_validate_json(request_json)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Case-study request metadata is invalid",
+        ) from exc
     precheck = validate_request(request)
     if not precheck.approved:
         raise HTTPException(
@@ -141,12 +148,8 @@ def create_case_study(
         )
     services = _services()
     try:
-        gateway = services.gateway_factory(request)
-        template = services.source_resolver.retrieve_template(user, str(request.template_url))
-        sources = (template,) + tuple(
-            services.source_resolver.retrieve(user, artifact)
-            for artifact in request.source_artifacts
-        )
+        sources = await read_uploaded_sources(source_files)
+        gateway = services.gateway_factory(request, user.access_token)
         execution = gateway.invoke(request, sources)
         if not execution.response.validation.approved:
             return execution.response
@@ -160,12 +163,12 @@ def create_case_study(
             owner_subject=user.subject,
         )
         return execution.response.model_copy(update={"artifact": reference})
-    except SourceRetrievalError as exc:
+    except UploadValidationError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="One or more approved Microsoft 365 sources could not be retrieved safely",
+            detail="One or more uploaded source files are invalid or exceed portal limits",
         ) from exc
-    except GatewayConfigurationError as exc:
+    except (ConfigurationError, GatewayConfigurationError) as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="The selected Foundry orchestration gateway is not configured",

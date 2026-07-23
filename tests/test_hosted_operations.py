@@ -9,9 +9,12 @@ import unittest
 from unittest.mock import patch
 
 from pptx import Presentation
+from pptx.util import Pt
 
 from km_agents.agents.hosted.case_study_generator import operations
-from km_agents.agents.hosted.case_study_generator.validation import validate_case_study_deck
+from km_agents.agents.hosted.case_study_generator.validation import (
+    validate_case_study_deck,
+)
 from km_agents.contracts import CaseStudyContent, CaseStudyRequest, FindingCode
 
 
@@ -156,6 +159,54 @@ class HostedOperationsTests(unittest.TestCase):
                 )
             self.assertFalse(validation.approved)
             self.assertIn(FindingCode.UNSUPPORTED_EVIDENCE, {finding.code for finding in validation.findings})
+
+    def test_validation_rejects_editable_text_that_breaks_brand_typography(self):
+        with tempfile.TemporaryDirectory() as workspace:
+            workspace_path = pathlib.Path(workspace)
+            input_path = workspace_path / "input"
+            input_path.mkdir()
+            shutil.copy(
+                ROOT / "evaluation" / "corpus" / "v1" / "sources" / "fabrikam-clean-brief.docx",
+                input_path / "brief.docx",
+            )
+            request = CaseStudyRequest(
+                customer_name="Fabrikam",
+                opportunity_summary="Modernize customer service operations.",
+                audience="Executive sponsors",
+                correlation_id="hosted-visual-qa-test",
+            )
+            content = CaseStudyContent(
+                customer_display_name="Customer",
+                title="Modernizing a customer service platform",
+                challenge="Legacy service operations limited visibility and agility.",
+                solution_overview="A phased modernization program aligned teams and data.",
+                architecture_components=["Experience", "Intelligence", "Data"],
+                implementation_steps=["Assess", "Design", "Deliver", "Measure"],
+                measurable_outcomes=["Improved visibility", "Faster delivery"],
+                customer_quote="The program created a foundation for responsible scale.",
+                next_steps=["Confirm scope", "Measure adoption"],
+                provenance_files=["brief.docx"],
+            )
+            with patch.dict(os.environ, {"AGENT_WORKSPACE_ROOT": workspace}, clear=False):
+                operations.create_case_study_deck_tool(
+                    content.model_dump(),
+                    "case-study.pptx",
+                    request.model_dump_json(),
+                )
+                deck_path = workspace_path / "output" / "case-study.pptx"
+                deck = Presentation(deck_path)
+                title = next(
+                    shape for shape in deck.slides[0].shapes if shape.name == "editable:s1:title"
+                )
+                title.text_frame.paragraphs[0].runs[0].font.size = Pt(72)
+                deck.save(deck_path)
+                validation = validate_case_study_deck(deck_path, request, ["brief.docx"])
+
+            self.assertFalse(validation.approved)
+            self.assertIn(
+                FindingCode.VISUAL_BRAND_VIOLATION,
+                {finding.code for finding in validation.findings},
+            )
 
     def test_generation_tool_accepts_incomplete_evidence_lists_and_pads_template_slots(self):
         content = {

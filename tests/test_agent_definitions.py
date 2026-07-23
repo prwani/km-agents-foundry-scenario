@@ -28,10 +28,19 @@ class AgentDefinitionTests(unittest.TestCase):
         self.assertTrue(
             (service_root / "assets" / "templates" / "contoso-template-policy.json").is_file()
         )
+        self.assertTrue(
+            (
+                service_root
+                / "assets"
+                / "templates"
+                / "contoso-case-study-template-with-brand-guidelines.pptx"
+            ).is_file()
+        )
         self.assertTrue((service_root / "skills" / "pptx" / "SKILL.md").is_file())
 
         mirrored_files = (
             "assets/templates/contoso-case-study-template.pptx",
+            "assets/templates/contoso-case-study-template-with-brand-guidelines.pptx",
             "assets/templates/contoso-template-policy.json",
             "skills/pptx/SKILL.md",
         )

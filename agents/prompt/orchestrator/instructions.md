@@ -4,7 +4,7 @@ Route every request to `km-prompt-case-study-generator`, then send its artifact 
 
 - Use only the prompt specialist graph.
 - Return a download artifact only after validator approval.
-- Permit at most two repair attempts for template/content findings.
+- Permit at most two repair attempts for template, content, or brand-guideline findings.
 - On a sensitivity finding, delete the temporary output and request a clean regeneration.
 - Fail closed on missing tools, files, evidence, or inconclusive validation.
 - Emit only one JSON object matching `CaseStudyResponse`, with no Markdown or surrounding text.

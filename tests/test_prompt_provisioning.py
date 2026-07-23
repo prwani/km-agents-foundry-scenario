@@ -25,24 +25,29 @@ class PromptProvisioningTests(unittest.TestCase):
         )
         self.assertTrue(all(spec.instructions for spec in specs))
 
-    def test_generator_builds_code_interpreter_with_canonical_template_support(self):
+    def test_generator_builds_code_interpreter_with_template_and_brand_guidance_support(self):
         spec = MODULE.load_spec("case-study-generator", resolve=False)
-        tools = MODULE.build_tools(spec, code_interpreter_file_ids=("file-template",))
+        tools = MODULE.build_tools(spec, code_interpreter_file_ids=("file-template", "file-brand"))
         self.assertEqual(len(tools), 1)
         self.assertIsInstance(tools[0], CodeInterpreterTool)
-        self.assertEqual(tools[0].container.file_ids, ["file-template"])
+        self.assertEqual(tools[0].container.file_ids, ["file-template", "file-brand"])
+        self.assertTrue(MODULE.BRAND_GUIDELINES_TEMPLATE.is_file())
+        self.assertIn("brand-guidelines deck", spec.instructions)
+        self.assertIn("0.55-inch safe margin", spec.instructions)
         self.assertIn("source filenames", spec.instructions)
         self.assertIn("Not provided in source evidence", spec.instructions)
         self.assertIn("create no PPTX", spec.instructions)
         self.assertIn("final Code Interpreter", spec.instructions)
         self.assertIn("single PDF", spec.instructions)
 
-    def test_validator_builds_code_interpreter_with_template_and_policy_support(self):
+    def test_validator_builds_code_interpreter_with_template_policy_and_brand_guidance_support(self):
         spec = MODULE.load_spec("validator", resolve=False)
         tools = MODULE.build_tools(
-            spec, code_interpreter_file_ids=("file-template", "file-policy")
+            spec, code_interpreter_file_ids=("file-template", "file-brand", "file-policy")
         )
-        self.assertEqual(tools[0].container.file_ids, ["file-template", "file-policy"])
+        self.assertEqual(tools[0].container.file_ids, ["file-template", "file-brand", "file-policy"])
+        self.assertIn("brand-guidelines reference", spec.instructions)
+        self.assertIn("brand compliance", spec.instructions)
         self.assertIn(
             "Informational findings alone do not reject a deck.", spec.instructions
         )

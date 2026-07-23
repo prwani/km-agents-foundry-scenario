@@ -22,6 +22,9 @@ from azure.identity import DefaultAzureCredential
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_ROOT = ROOT / "agents" / "prompt"
 CANONICAL_TEMPLATE = ROOT / "assets" / "templates" / "contoso-case-study-template.pptx"
+BRAND_GUIDELINES_TEMPLATE = (
+    ROOT / "assets" / "templates" / "contoso-case-study-template-with-brand-guidelines.pptx"
+)
 VALIDATION_POLICY = ROOT / "assets" / "templates" / "contoso-template-policy.json"
 ENV_PATTERN = re.compile(r"^\$\{([A-Z][A-Z0-9_]*)\}$")
 DEPLOYMENT_ORDER = ("case-study-generator", "validator", "orchestrator")
@@ -131,24 +134,29 @@ def provision(folders: tuple[str, ...]) -> None:
             version_created = False
             try:
                 if folder == "case-study-generator":
-                    if not CANONICAL_TEMPLATE.is_file():
-                        raise FileNotFoundError(f"Canonical template is missing: {CANONICAL_TEMPLATE}")
-                    attached_file_ids.append(
-                        project.get_openai_client()
-                        .files.create(
-                            file=(
-                                CANONICAL_TEMPLATE.name,
-                                CANONICAL_TEMPLATE.read_bytes(),
-                                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                            ),
-                            purpose="assistants",
+                    for source in (CANONICAL_TEMPLATE, BRAND_GUIDELINES_TEMPLATE):
+                        if not source.is_file():
+                            raise FileNotFoundError(f"Prompt generator artifact is missing: {source}")
+                        attached_file_ids.append(
+                            project.get_openai_client()
+                            .files.create(
+                                file=(
+                                    source.name,
+                                    source.read_bytes(),
+                                    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                                ),
+                                purpose="assistants",
+                            )
+                            .id
                         )
-                        .id
-                    )
                 elif folder == "validator":
                     for source, content_type in (
                         (
                             CANONICAL_TEMPLATE,
+                            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        ),
+                        (
+                            BRAND_GUIDELINES_TEMPLATE,
                             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
                         ),
                         (VALIDATION_POLICY, "application/json"),
